@@ -14,13 +14,13 @@ class Term(models.Model):
     year = models.IntegerField()
 
     def __unicode__(self):
-        return "{0} {1}".format(self.get_season_display(), year)
+        return "{0} {1}".format(self.get_season_display(), self.year)
 
 class Subject(models.Model):
     name = models.CharField(max_length=256)
 
     def __unicode__(self):
-        return name
+        return self.name
 
 class Course(models.Model):
     subject = models.ForeignKey(Subject)
@@ -28,17 +28,17 @@ class Course(models.Model):
     number = models.CharField(max_length=10)
 
     def __unicode__(self):
-        return "{0} {1}".format(subject, number)
+        return "{0} {1}".format(self.subject, self.number)
 
 class Section(models.Model):
     course = models.ForeignKey(Course)
     term = models.ForeignKey(Term)
-    number = models.IntegerField()
-    instructor = models.CharField(max_length=256)
+    number = models.CharField(max_length=10)
+    instructor = models.CharField(max_length=1024)
     ccn = models.CharField(max_length=5, verbose_name="CCN")
 
     def __unicode__(self):
-        return "{0}-{1} ({2})".format(course, number, term)
+        return "{0}-{1} ({2})".format(self.course, self.number, self.term)
 
     def _get_grade_average(self):
         """Returns the average grade points for this section."""
@@ -55,11 +55,11 @@ class Section(models.Model):
 
 class Grade(models.Model):
     name = models.CharField(max_length=20)
-    letter = models.BooleanField()
-    points = models.FloatField()
+    letter = models.BooleanField(default=False)
+    points = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
-        return name
+        return self.name
 
 class GradeCount(models.Model):
     section = models.ForeignKey(Section)
@@ -67,4 +67,4 @@ class GradeCount(models.Model):
     count = models.IntegerField()
 
     def __unicode__(self):
-        return "GradeCount({0}, {1})".format(section, grade)
+        return "GradeCount({0}, {1})".format(self.section, self.grade)
