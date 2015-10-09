@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Sum
+from django.utils.functional import cached_property
 
 class Term(models.Model):
     SPRING = 0
@@ -41,17 +42,18 @@ class Section(models.Model):
         return "{0}-{1} ({2})".format(self.course, self.number, self.term)
 
     def _get_grade_average(self):
-        """Returns the average grade points for this section."""
-        letter_grade_counts = self.gradecount_set.filter(letter=True)
-        total_count = letter_grade_counts.aggregate(Sum('count'))
-        if total_count == 0:
+        """Returns the average grade points for this section. If there were no
+        counts or all not-letter grades, then return None."""
+        letter_grade_counts = self.gradecount_set.filter(grade__letter=True)
+        total_count = letter_grade_counts.aggregate(Sum('count'))['count__sum']
+        if total_count == None:
             return None
         total_points = 0.0
         for grade_count in letter_grade_counts:
             total_points += grade_count.grade.points * grade_count.count
         return total_points / total_count
 
-    grade_average = property(_get_grade_average)
+    grade_average = cached_property(_get_grade_average, name='grade_average')
 
 class Grade(models.Model):
     name = models.CharField(max_length=20)
