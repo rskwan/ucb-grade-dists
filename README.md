@@ -7,10 +7,11 @@ Install the Python dependencies with `pip install -r requirements.txt`.
 
 ## Setup
 
-* In Postgres, run `CREATE DATABASE ucbgradedists;`.
+* In Postgres, create a database for this. For example, if you wanted to call it `ucbgradedists`, run `CREATE DATABASE ucbgradedists`.
 * Set these environment variables:
   * `DJANGO_SECRET_KEY`: a secret key (usually a randomly generated string)
   * `DJANGO_SETTINGS_MODULE`: use `ucbgradedists.settings.local` if you're in a development environment, and `ucbgradedists.settings.production` in production.
+  * `DATABASE_URL`: a URL to your database. See the [dj_database_url](https://github.com/kennethreitz/dj-database-url) README for the format.
 * Run `python manage.py migrate` to run the migrations and create tables for the models.
 * Run `python manage.py importcsv [season] [year] [inname]` on a CSV file to import data. See `python manage.py importcsv -h` for more information.
 

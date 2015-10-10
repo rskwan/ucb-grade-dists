@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from unipath import Path
 
@@ -84,12 +85,8 @@ WSGI_APPLICATION = 'ucbgradedists.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ucbgradedists',
-    }
-}
+DATABASES = { 'default': dj_database_url.config() }
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
