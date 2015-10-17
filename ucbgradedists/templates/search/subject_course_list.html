@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ object }}: Courses </h1>
+<ol>
+{% for course in courses %}
+  <li><a href="{% url 'course-section-list' course.id %}">{{ course }}</a></li>
+{% empty %}
+  <li>Courses haven't been loaded yet!</li>
+{% endfor %}
+</ol>
+{% endblock content %}

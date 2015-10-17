@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ object }} </h1>
+<ul>
+  <li>Instructor(s): {{ object.instructor }}</li>
+  <li>Average grade: {{ object.grade_average }}</li>
+</ul>
+
+<h2>Grade Distribution</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Grade</th>
+      <th>Count</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for gc in grade_counts %}
+    <tr>
+      <td>{{ gc.grade }}</td>
+      <td>{{ gc.count }}</td>
+    </tr>
+{% empty %}
+    <tr>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

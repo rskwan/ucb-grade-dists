@@ -12,22 +12,23 @@ class Command(BaseCommand):
         parser.add_argument('inname', help="path to the csv file to read")
 
     def handle(self, *args, **options):
-        # assumption: this csv only contains data for one term, so CCNs are unique
-        season = options['season']
-        year = options['year']
-        term = Term.objects.get_or_create(season=season, year=year)[0]
+        handle_helper(options['season'], options['year'], options['inname'])
 
-        # data maps CCN to a Section object
-        data = {}
-        with open(options['inname'], 'r+') as infile:
-            inreader = csv.reader(infile)
-            indices = None
-            for row in inreader:
-                if indices is None:
-                    header = [s.replace('\xef\xbb\xbf', '') for s in row]
-                    indices = find_indices(header)
-                    continue
-                data = process_row(term, data, row, indices)
+def handle_helper(season, year, inname):
+    # assumption: this csv only contains data for one term, so CCNs are unique
+    term = Term.objects.get_or_create(season=season, year=year)[0]
+
+    # data maps CCN to a Section object
+    data = {}
+    with open(inname, 'r+') as infile:
+        inreader = csv.reader(infile)
+        indices = None
+        for row in inreader:
+            if indices is None:
+                header = [s.replace('\xef\xbb\xbf', '') for s in row]
+                indices = find_indices(header)
+                continue
+            data = process_row(term, data, row, indices)
 
 def process_row(term, data, row, indices):
     """Find the section corresponding to ROW, create necessary objects,

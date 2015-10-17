@@ -16,8 +16,10 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from core import urls as core_urls
+from search import urls as search_urls
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^', include(core_urls)),
+    url(r'^search/', include(search_urls)),
 ]

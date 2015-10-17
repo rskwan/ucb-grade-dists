@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Subjects</h1>
+<ul>
+{% for subject in object_list %}
+  <li><a href="{% url 'subject-course-list' subject.id %}">{{ subject }}</a></li>
+{% empty %}
+  <li>Subjects haven't been loaded yet!</li>
+{% endfor %}
+</ul>
+{% endblock content %}

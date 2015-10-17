@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ object }}: Sections </h1>
+<ol>
+{% for section in sections %}
+  <li><a href="{% url 'section-detail' section.id %}">{{ section }}</a></li>
+{% empty %}
+  <li>Sections haven't been loaded yet!</li>
+{% endfor %}
+</ol>
+{% endblock content %}
