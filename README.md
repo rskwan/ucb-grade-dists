@@ -1,12 +1,16 @@
 # UCB Grade Distributions
 
+A tool for exploration of grade distribution data obtained from Cal Answers.
+
 ## Requirements
 
 Python 2.7.x, Postgres, and the packages in `requirements.txt`.
-Install the Python dependencies with `pip install -r requirements.txt`.
 
 ## Setup
 
+### Local Development
+
+* Create a virtualenv and install the Python dependencies with `pip install -r requirements.txt`.
 * In Postgres, create a database for this. For example, if you wanted to call it `ucbgradedists`, run `CREATE DATABASE ucbgradedists`.
 * Set these environment variables:
   * `DJANGO_SECRET_KEY`: a secret key (usually a randomly generated string)
@@ -19,7 +23,7 @@ Install the Python dependencies with `pip install -r requirements.txt`.
 * Run `python manage.py importcsv [season] [year] [inname]` on a CSV file to import data. See `python manage.py importcsv -h` for more information.
 * Run `python manage.py importdir [dir]` to import data from all CSV files in a directory.
 
-## Deploying on Heroku
+### Deploying on Heroku
 
 * Set up your app and dyno on Heroku:
   ```
@@ -31,13 +35,15 @@ Install the Python dependencies with `pip install -r requirements.txt`.
 * Run `heroku run python ucbgradedists/manage.py migrate` to create the tables.
 * (TODO) Eventually, we'll have an admin/superuser page to import CSV data.
 
-## Current Functionality
+## Functionality
+
+### Current
 
 * Importing grade distributions from Cal Answers CSV output.
 * A RESTful API (via Tastypie) to access this data at `/api/v1/`. Check out [the Tastypie docs](http://django-tastypie.readthedocs.org/en/latest/) to figure out how to work with this!
 * A very basic UI for accessing our data at `/search/subjects/`.
 
-## TODO/Next Steps/The Future
+### Future
 
 * Add a data import page to the admin site.
 * Introduce reasonable orderings for course numbers and grades.

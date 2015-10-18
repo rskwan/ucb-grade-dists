@@ -70,3 +70,30 @@ class GradeCount(models.Model):
 
     def __unicode__(self):
         return "GradeCount({0}, {1})".format(self.section, self.grade)
+
+def grade_compare(grade1, grade2):
+    """Return 0 for equal grades, 1 if grade1 > grade2, or -1 if grade1 < grade2."""
+    if grade1 == grade2:
+        return 0
+    elif grade1.letter and not grade2.letter:
+        return 1
+    elif grade2.letter and not grade1.letter:
+        return -1
+    else:
+        ordering = ['A+', 'A', 'A-', 'B+', 'B', 'B-',
+                    'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F',
+                    'High Honors', 'Honors',
+                    'Pass', 'Pass Conditional',
+                    'Credit', 'Satisfactory',
+                    'No Credit', 'Not Pass', 'Unsatisfactory']
+        idx1, idx2 = -1
+        if grade1.name in ordering:
+            idx1 = ordering.index(grade1.name)
+        if grade2.name in ordering:
+            idx2 = ordering.index(grade2.name)
+        if idx1 == idx2:
+            return 0
+        elif idx1 > idx2:
+            return 1
+        else:
+            return -1
