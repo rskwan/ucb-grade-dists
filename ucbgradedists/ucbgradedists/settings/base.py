@@ -24,10 +24,20 @@ def env_var(var_name):
 # Basic settings
 
 SECRET_KEY = env_var('DJANGO_SECRET_KEY')
-
 DEBUG = False
-
 ALLOWED_HOSTS = []
+ADMINS = (
+    (env_var('ADMIN_NAME'), env_var('ADMIN_EMAIL')),
+)
+
+# Email settings, assuming you use gmail.
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = env_var('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env_var('EMAIL_HOST_PASSWORD')
+SERVER_EMAIL = env_var('SERVER_EMAIL')
 
 # Set up directory structure and static files
 
