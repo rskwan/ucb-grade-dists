@@ -26,11 +26,11 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 ### Deploying on Heroku
 
 * Set up your app and dyno on Heroku:
-  ```
-  heroku create <your_app_name>
-  git push heroku master
-  heroku ps:scale web=1
-  ```
+
+        heroku create <your_app_name>
+        git push heroku master
+        heroku ps:scale web=1
+
 * Set the environment variables listed above, either through Heroku's web interface, or with the CLI tool.
 * Run `heroku run python ucbgradedists/manage.py migrate` to create the tables.
 * (TODO) Eventually, we'll have an admin/superuser page to import CSV data.
