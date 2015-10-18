@@ -24,6 +24,7 @@ Install the Python dependencies with `pip install -r requirements.txt`.
 
 ## TODO/Next Steps/The Future
 
+* Add a data import page to the admin site.
 * Introduce reasonable orderings for course numbers and grades.
 * Improve the data viewer.
 * Compute some interesting statistics.

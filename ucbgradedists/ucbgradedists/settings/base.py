@@ -29,13 +29,14 @@ DEBUG = False
 
 ALLOWED_HOSTS = []
 
-# Set up directory structure
+# Set up directory structure and static files
 
 BASE_DIR = Path(__file__).ancestor(3)
 MEDIA_ROOT = BASE_DIR.child("media")
-STATIC_ROOT = BASE_DIR.child("static")
+STATIC_ROOT = BASE_DIR.child("staticfiles")
+STATIC_URL = '/static/'
 STATICFILES_DIRS = (
-    BASE_DIR.child("assets"),
+    BASE_DIR.child("static"),
 )
 
 # Application definition
@@ -86,7 +87,7 @@ WSGI_APPLICATION = 'ucbgradedists.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = { 'default': dj_database_url.config() }
-
+DATABASES['default']['ENGINE'] = 'django_postgrespool'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -100,8 +101,3 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.8/howto/static-files/
-
-STATIC_URL = '/static/'
