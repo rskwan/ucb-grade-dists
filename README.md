@@ -19,6 +19,18 @@ Install the Python dependencies with `pip install -r requirements.txt`.
 * Run `python manage.py importcsv [season] [year] [inname]` on a CSV file to import data. See `python manage.py importcsv -h` for more information.
 * Run `python manage.py importdir [dir]` to import data from all CSV files in a directory.
 
+## Deploying on Heroku
+
+* Set up your app and dyno on Heroku:
+  ```
+  heroku create <your_app_name>
+  git push heroku master
+  heroku ps:scale web=1
+  ```
+* Set the environment variables listed above, either through Heroku's web interface, or with the CLI tool.
+* Run `heroku run python ucbgradedists/manage.py migrate` to create the tables.
+* (TODO) Eventually, we'll have an admin/superuser page to import CSV data.
+
 ## Current Functionality
 
 * Importing grade distributions from Cal Answers CSV output.
