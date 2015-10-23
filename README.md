@@ -45,11 +45,11 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 
 ### Future
 
-* Add a data import page to the admin site.
 * Introduce reasonable orderings for course numbers and grades.
 * Improve the data viewer.
 * Compute some interesting statistics.
 * Make pretty graphs and apps and things.
+* (Bonus) Add a data import page to the admin site.
 * (Bonus) It would be cool to have a GUI for playing with the API.
 * (Maybe) Create a model for Instructor (with a many-to-many field in Section), and parse it in the import script. (Problem: some instructors are distinct but have the same name.)
 

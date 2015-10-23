@@ -31,5 +31,5 @@ class SectionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(SectionDetailView, self).get_context_data(**kwargs)
-        context['grade_counts'] = self.object.gradecount_set.all()
+        context['grade_counts'] = self.object.gradecount_set.in_grade_order()
         return context

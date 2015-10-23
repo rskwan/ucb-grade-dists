@@ -1,3 +1,5 @@
+from functools import cmp_to_key
+
 from django.db import models
 from django.db.models import Sum
 from django.utils.functional import cached_property
@@ -16,6 +18,9 @@ class Term(models.Model):
 
     def __unicode__(self):
         return "{0} {1}".format(self.get_season_display(), self.year)
+
+    class Meta:
+        ordering = ['year', 'season']
 
 class Subject(models.Model):
     name = models.CharField(max_length=256)
@@ -55,6 +60,9 @@ class Section(models.Model):
 
     grade_average = cached_property(_get_grade_average, name='grade_average')
 
+    class Meta:
+        ordering = ['term', 'number']
+
 class Grade(models.Model):
     name = models.CharField(max_length=20)
     letter = models.BooleanField(default=False)
@@ -62,6 +70,13 @@ class Grade(models.Model):
 
     def __unicode__(self):
         return self.name
+
+class GradeCountManager(models.Manager):
+    use_for_related_fields = True
+
+    def in_grade_order(self, *args, **kwargs):
+        qs = self.get_queryset().filter(*args, **kwargs)
+        return sorted(qs, key = cmp_to_key(cmp_gc), reverse = True)
 
 class GradeCount(models.Model):
     section = models.ForeignKey(Section)
@@ -71,7 +86,9 @@ class GradeCount(models.Model):
     def __unicode__(self):
         return "GradeCount({0}, {1})".format(self.section, self.grade)
 
-def grade_compare(grade1, grade2):
+    objects = GradeCountManager()
+
+def cmp_grade(grade1, grade2):
     """Return 0 for equal grades, 1 if grade1 > grade2, or -1 if grade1 < grade2."""
     if grade1 == grade2:
         return 0
@@ -86,14 +103,17 @@ def grade_compare(grade1, grade2):
                     'Pass', 'Pass Conditional',
                     'Credit', 'Satisfactory',
                     'No Credit', 'Not Pass', 'Unsatisfactory']
-        idx1, idx2 = -1
+        idx1 = idx2 = -1
         if grade1.name in ordering:
             idx1 = ordering.index(grade1.name)
         if grade2.name in ordering:
             idx2 = ordering.index(grade2.name)
         if idx1 == idx2:
             return 0
-        elif idx1 > idx2:
+        elif idx1 < idx2:
             return 1
         else:
             return -1
+
+def cmp_gc(gc1, gc2):
+    return cmp_grade(gc1.grade, gc2.grade)
