@@ -1,12 +1,59 @@
 {% extends "base.html" %}
+{% load mathfilters %}
 
 {% block content %}
 <h1>{{ object }}: Courses </h1>
-<ol>
+<table>
+  <thead>
+    <tr>
+      <th>Course</th>
+      <th>Median</th>
+      <th>Average</th>
+      <th>St. Deviation</th>
+      <th>Letter Grades</th>
+      <th>Total Grades</th>
+      <th>% Letter</th>
+    </tr>
+  </thead>
+  <tbody>
 {% for course in courses %}
-  <li><a href="{% url 'course-section-list' course.id %}">{{ course }}</a></li>
+    <tr>
+      <td>
+        <a href="{% url 'course-section-list' course.id %}">
+          {{ course }}
+        </a>
+      </td>
+      <td>
+        {{ course.grade_median|floatformat:2|default:"N/A" }}
+      </td>
+      <td>
+        {{ course.grade_average|floatformat:2|default:"N/A" }}
+      </td>
+      <td>
+        {{ course.grade_stdev|floatformat:2|default:"N/A" }}
+      </td>
+      <td>
+        {{ course.letter_grades }}
+      </td>
+      <td>
+        {{ course.total_grades }}
+      </td>
+      <td>
+        {{ course.letter_grades|div:course.total_grades|mul:100|floatformat:0 }}
+      </td>
+    </tr>
 {% empty %}
-  <li>Courses haven't been loaded yet!</li>
+    <tr>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
 {% endfor %}
-</ol>
+  </tbody>
+</table>
 {% endblock content %}

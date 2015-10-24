@@ -4,7 +4,10 @@
 <h1>{{ object }} </h1>
 <ul>
   <li>Instructor(s): {{ object.instructor }}</li>
-  <li>Average grade: {{ object.grade_average }}</li>
+  <li>Median: {{ object.grade_median|floatformat:2|default:"N/A" }}</li>
+  <li>Average: {{ object.grade_average|floatformat:2|default:"N/A" }}</li>
+  <li>St. Deviation: {{ object.grade_stdev|floatformat:2|default:"N/A" }}</li>
+  <li>Letter Grades: {{ object.letter_grades }} of {{ object.total_grades }}</li>
 </ul>
 
 <h2>Grade Distribution</h2>

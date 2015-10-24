@@ -1,12 +1,68 @@
 {% extends "base.html" %}
+{% load mathfilters %}
 
 {% block content %}
 <h1>{{ object }}: Sections </h1>
-<ol>
+<table>
+  <thead>
+    <tr>
+      <th>Section</th>
+      <th>Term</th>
+      <th>Instructor(s)</th>
+      <th>Median</th>
+      <th>Average</th>
+      <th>St. Deviation</th>
+      <th>Letter Grades</th>
+      <th>Total Grades</th>
+      <th>% Letter</th>
+    </tr>
+  </thead>
+  <tbody>
 {% for section in sections %}
-  <li><a href="{% url 'section-detail' section.id %}">{{ section }}</a></li>
+    <tr>
+      <td>
+        <a href="{% url 'section-detail' section.id %}">
+            {{ section.course }}-{{section.number }}
+        </a>
+      </td>
+      <td>
+        {{ section.term }}
+      </td>
+      <td>
+        {{ section.instructor }}
+      </td>
+      <td>
+        {{ section.grade_median|floatformat:2|default:"N/A" }}
+      </td>
+      <td>
+        {{ section.grade_average|floatformat:2|default:"N/A" }}
+      </td>
+      <td>
+        {{ section.grade_stdev|floatformat:2|default:"N/A" }}
+      </td>
+      <td>
+        {{ section.letter_grades }}
+      </td>
+      <td>
+        {{ section.total_grades }}
+      </td>
+      <td>
+        {{ section.letter_grades|div:section.total_grades|mul:100|floatformat:0 }}
+      </td>
+    </tr>
 {% empty %}
-  <li>Sections haven't been loaded yet!</li>
+    <tr>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
 {% endfor %}
-</ol>
+  </tbody>
+</table>
 {% endblock content %}

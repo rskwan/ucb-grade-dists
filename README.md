@@ -41,11 +41,10 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 
 * Importing grade distributions from Cal Answers CSV output.
 * A RESTful API (via Tastypie) to access this data at `/api/v1/`. Check out [the Tastypie docs](http://django-tastypie.readthedocs.org/en/latest/) to figure out how to work with this!
-* A very basic UI for accessing our data at `/search/subjects/`.
+* A basic UI for accessing our data at `/search/subjects/`. This includes basic grade statistics -- average, standard deviation, median -- for each subject, course, and section.
 
 ### Future
 
-* Introduce reasonable orderings for course numbers and grades.
 * Improve the data viewer.
 * Compute some interesting statistics.
 * Make pretty graphs and apps and things.

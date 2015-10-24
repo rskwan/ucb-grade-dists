@@ -1,8 +1,12 @@
+import numpy as np
+import re
 from functools import cmp_to_key
 
 from django.db import models
 from django.db.models import Sum
 from django.utils.functional import cached_property
+
+course_num_pattern = re.compile('[A-Za-z]*([0-9]+)[A-Za-z]*')
 
 class Term(models.Model):
     SPRING = 0
@@ -24,17 +28,115 @@ class Term(models.Model):
 
 class Subject(models.Model):
     name = models.CharField(max_length=256)
+    total_grades = models.IntegerField(default=0)
+    letter_grades = models.IntegerField(default=0)
+    grade_average = models.FloatField(null=True)
+    grade_median = models.FloatField(null=True)
+    grade_stdev = models.FloatField(null=True)
 
     def __unicode__(self):
         return self.name
 
+    def save(self):
+        total_grades = self.course_set.aggregate(Sum('total_grades'))['total_grades__sum']
+        self.total_grades = 0 if total_grades is None else total_grades
+        letter_grades = self.course_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
+        self.letter_grades = 0 if letter_grades is None else letter_grades
+        if not letter_grades:
+            self.grade_average = None
+            self.grade_median = None
+            self.grade_stdev = None
+        else:
+            subject_gp = reduce(np.append,
+                                [course.course_gp for course in self.course_set.all()])
+            self.grade_average = np.mean(subject_gp)
+            self.grade_median = np.median(subject_gp)
+            self.grade_stdev = np.std(subject_gp)
+        super(Subject, self).save()
+
+    class Meta:
+        ordering = ['name']
+
 class Course(models.Model):
+    LOWER = 0
+    UPPER = 1
+    GRADUATE = 2
+    TEACHING = 3
+    PROFESSIONAL = 4
+    MASTERS = 5
+    DOCTORAL = 6
+    OTHER = 7
+    DIVISION_CHOICES = (
+        (LOWER, "Lower Division"),
+        (UPPER, "Upper Division"),
+        (GRADUATE, "Graduate"),
+        (TEACHING, "Teaching"),
+        (PROFESSIONAL, "Professional"),
+        (MASTERS, "Master's Exam"),
+        (DOCTORAL, "Doctoral Exam"),
+        (OTHER, "Other")
+    )
+
     subject = models.ForeignKey(Subject)
     title = models.TextField()
     number = models.CharField(max_length=10)
+    num_numerical_part = models.IntegerField(null=True)
+    division = models.IntegerField(choices=DIVISION_CHOICES, default=OTHER)
+    total_grades = models.IntegerField(default=0)
+    letter_grades = models.IntegerField(default=0)
+    grade_average = models.FloatField(null=True)
+    grade_median = models.FloatField(null=True)
+    grade_stdev = models.FloatField(null=True)
 
     def __unicode__(self):
         return "{0} {1}".format(self.subject, self.number)
+
+    @cached_property
+    def course_gp(self):
+        return reduce(np.append,
+                      [section.letter_gp for section in self.section_set.all()],
+                      np.array([]))
+
+    def save(self):
+        # set numerical part of course number and division
+        m = course_num_pattern.match(self.number)
+        if m:
+            self.num_numerical_part = int(m.group(1))
+            if self.num_numerical_part < 100:
+                self.division = self.LOWER
+            elif self.num_numerical_part < 200:
+                self.division = self.UPPER
+            elif self.num_numerical_part < 300:
+                self.division = self.GRADUATE
+            elif self.num_numerical_part < 400:
+                self.division = self.TEACHING
+            elif self.num_numerical_part < 500:
+                self.division = self.PROFESSIONAL
+            elif self.num_numerical_part == 601:
+                self.division = self.MASTERS
+            elif self.num_numerical_part == 602:
+                self.division = self.DOCTORAL
+            else:
+                self.division = self.OTHER
+        else:
+            self.division = self.OTHER
+        # grade statistics
+        total_grades = self.section_set.aggregate(Sum('total_grades'))['total_grades__sum']
+        self.total_grades = 0 if total_grades is None else total_grades
+        letter_grades = self.section_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
+        self.letter_grades = 0 if letter_grades is None else letter_grades
+        if not letter_grades:
+            self.grade_average = None
+            self.grade_median = None
+            self.grade_stdev = None
+        else:
+            self.grade_average = np.mean(self.course_gp)
+            self.grade_median = np.median(self.course_gp)
+            self.grade_stdev = np.std(self.course_gp)
+        super(Course, self).save()
+
+    class Meta:
+        ordering = ['subject', 'num_numerical_part', 'number']
 
 class Section(models.Model):
     course = models.ForeignKey(Course)
@@ -42,23 +144,36 @@ class Section(models.Model):
     number = models.CharField(max_length=10)
     instructor = models.CharField(max_length=1024)
     ccn = models.CharField(max_length=5, verbose_name="CCN")
+    total_grades = models.IntegerField(default=0)
+    letter_grades = models.IntegerField(default=0)
+    grade_average = models.FloatField(null=True)
+    grade_median = models.FloatField(null=True)
+    grade_stdev = models.FloatField(null=True)
 
     def __unicode__(self):
         return "{0}-{1} ({2})".format(self.course, self.number, self.term)
 
-    def _get_grade_average(self):
-        """Returns the average grade points for this section. If there were no
-        counts or all not-letter grades, then return None."""
-        letter_grade_counts = self.gradecount_set.filter(grade__letter=True)
-        total_count = letter_grade_counts.aggregate(Sum('count'))['count__sum']
-        if total_count == None:
-            return None
-        total_points = 0.0
-        for grade_count in letter_grade_counts:
-            total_points += grade_count.grade.points * grade_count.count
-        return total_points / total_count
+    @cached_property
+    def letter_gp(self):
+        """Returns a NumPy array of grade points."""
+        letter_gc = self.gradecount_set.filter(grade__letter=True)
+        return np.array(reduce(lambda a, b: a + b,
+                               [[gc.grade.points] * gc.count for gc in letter_gc],
+                               []))
 
-    grade_average = cached_property(_get_grade_average, name='grade_average')
+    def save(self):
+        total_grades = self.gradecount_set.aggregate(Sum('count'))['count__sum']
+        self.total_grades = 0 if total_grades is None else total_grades
+        self.letter_grades = self.letter_gp.size
+        if self.letter_grades == 0:
+            self.grade_average = None
+            self.grade_median = None
+            self.grade_stdev = None
+        else:
+            self.grade_average = np.mean(self.letter_gp)
+            self.grade_median = np.median(self.letter_gp)
+            self.grade_stdev = np.std(self.letter_gp)
+        super(Section, self).save()
 
     class Meta:
         ordering = ['term', 'number']
