@@ -45,12 +45,31 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 
 ### Future
 
-* Improve the data viewer.
-* Compute some interesting statistics.
-* Make pretty graphs and apps and things.
+* Make things less ugly in general.
+* Make things sortable. (Some JS thing, I'm guessing.)
+  * (QUESTION) Which classes/subjects have the highest/lowest averages/medians/stdevs?
+* Put a histogram (or similar chart) for each section (course? subject?).
+  * The first two (section, course) are already covered by Berkeleytime and ScheduleBuilder for a lot of classes/terms, and it works pretty well.
+  * Choice: grade points vs letter grades? We only use grade points in calculations, but maybe students care about A+ vs A- on their transcript.
+* Calculate some statistics.
+  * What percentile do you need to be at to get a certain letter grade, per section?
+    * (Maybe) This could be useful for a course-level view, and interesting (if unhelpful) for a subject-level view.
+  * For a given subject, separate statistics by:
+    * Division: most people only really care about lower/upper div, maybe graduate classes.
+      * (QUESTION) How different are distributions for lower vs upper vs graduate?
+    * Term: summer vs fall/spring.
+      * (QUESTION) How different are summer grades from fall/spring grades?
+      * (QUESTION, maybe) Are fall and spring grades different?
+* Search by instructor.
+  * (Maybe) Create a model for Instructor (with a many-to-many field in Section).
+    * Problem: distinct people can have the same name.
+* Trend of average (or median) over time, per course or subject (or instructor; see last bullet point).
+* Track enrollment over time per course or subject.
+  * For a course, maybe a bar for each term, divided up by instructor.
+    * (QUESTION) Does enrollment correlate with grade distribution? Let's say average or median grade. The students don't know the grade distribution in advance, but they do know the instructor.
+  * For a subject, a line chart of overall enrollment should be fine. A more fine-grained display that includes classes could be overkill and really cramped, unless there's a good way to do this.
 * (Bonus) Add a data import page to the admin site.
-* (Bonus) It would be cool to have a GUI for playing with the API.
-* (Maybe) Create a model for Instructor (with a many-to-many field in Section), and parse it in the import script. (Problem: some instructors are distinct but have the same name.)
+* (Bonus) It would be cool to have a GUI for playing with the API. (Who knows if anyone is going to end up using it, though...)
 
 ## License
 
