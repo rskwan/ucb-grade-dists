@@ -1,59 +1,68 @@
-{% extends "base.html" %}
+{% extends "dt_base.html" %}
 {% load mathfilters %}
 
 {% block content %}
-<h1>{{ object }}: Courses </h1>
-<table>
-  <thead>
-    <tr>
-      <th>Course</th>
-      <th>Median</th>
-      <th>Average</th>
-      <th>St. Deviation</th>
-      <th>Letter Grades</th>
-      <th>Total Grades</th>
-      <th>% Letter</th>
-    </tr>
-  </thead>
-  <tbody>
+<div class="col-1-1">
+  <div class="content">
+    <h1><a href="{% url 'subject-list' %}">Subjects</a> > {{ object }}</h1>
+    <table id="courses" class="display responsive nowrap" cellspacing="0" width="100%">
+      <thead>
+        <tr>
+          <th>Course</th>
+          <th>Median</th>
+          <th>Mean</th>
+          <th>St. Dev.</th>
+          <th>Grades</th>
+          <th>% Letter</th>
+        </tr>
+      </thead>
+      <tbody>
 {% for course in courses %}
-    <tr>
-      <td>
-        <a href="{% url 'course-section-list' course.id %}">
-          {{ course }}
-        </a>
-      </td>
-      <td>
-        {{ course.grade_median|floatformat:2|default:"N/A" }}
-      </td>
-      <td>
-        {{ course.grade_average|floatformat:2|default:"N/A" }}
-      </td>
-      <td>
-        {{ course.grade_stdev|floatformat:2|default:"N/A" }}
-      </td>
-      <td>
-        {{ course.letter_grades }}
-      </td>
-      <td>
-        {{ course.total_grades }}
-      </td>
-      <td>
-        {{ course.letter_grades|div:course.total_grades|mul:100|floatformat:0 }}
-      </td>
-    </tr>
+        <tr>
+          <td>
+            <a href="{% url 'course-section-list' course.id %}">
+              {{ course }}
+            </a>
+          </td>
+          <td>
+            {{ course.grade_median|floatformat:2|default:"N/A" }}
+          </td>
+          <td>
+            {{ course.grade_average|floatformat:2|default:"N/A" }}
+          </td>
+          <td>
+            {{ course.grade_stdev|floatformat:2|default:"N/A" }}
+          </td>
+          <td>
+            {{ course.total_grades }}
+          </td>
+          <td>
+            {{ course.letter_grades|div:course.total_grades|mul:100|floatformat:0 }}
+          </td>
+        </tr>
 {% empty %}
-    <tr>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>N/A</td>
-      <td>N/A</td>
-    </tr>
+        <tr>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td>N/A</td>
+        </tr>
 {% endfor %}
-  </tbody>
-</table>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('#courses').DataTable( {
+            "order": [],
+            "columnDefs": [
+                { "orderable": false, "targets": 0 }
+            ],
+            "paging": false
+        } );
+    } );
+</script>
 {% endblock content %}

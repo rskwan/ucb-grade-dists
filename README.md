@@ -41,13 +41,12 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 
 * Importing grade distributions from Cal Answers CSV output.
 * A RESTful API (via Tastypie) to access this data at `/api/v1/`. Check out [the Tastypie docs](http://django-tastypie.readthedocs.org/en/latest/) to figure out how to work with this!
-* A basic UI for accessing our data at `/search/subjects/`. This includes basic grade statistics -- average, standard deviation, median -- for each subject, course, and section.
+* A basic UI for accessing our data at `/search/subjects/`. This includes basic grade statistics -- average, standard deviation, median -- for each subject, course, and section. Thanks to DataTables, it's (mostly) sortable and searchable.
 
 ### Future
 
-* Make things less ugly in general.
-* Make things sortable. (Some JS thing, I'm guessing.)
-  * (QUESTION) Which classes/subjects have the highest/lowest averages/medians/stdevs?
+* Things that should be sortable, but aren't: terms, course/section numbers.
+* (QUESTION) Which classes/subjects have the highest/lowest averages/medians/stdevs?
 * Put a histogram (or similar chart) for each section (course? subject?).
   * The first two (section, course) are already covered by Berkeleytime and ScheduleBuilder for a lot of classes/terms, and it works pretty well.
   * Choice: grade points vs letter grades? We only use grade points in calculations, but maybe students care about A+ vs A- on their transcript.
@@ -60,7 +59,7 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
     * Term: summer vs fall/spring.
       * (QUESTION) How different are summer grades from fall/spring grades?
       * (QUESTION, maybe) Are fall and spring grades different?
-* Search by instructor.
+* Group by instructor.
   * (Maybe) Create a model for Instructor (with a many-to-many field in Section).
     * Problem: distinct people can have the same name.
 * Trend of average (or median) over time, per course or subject (or instructor; see last bullet point).

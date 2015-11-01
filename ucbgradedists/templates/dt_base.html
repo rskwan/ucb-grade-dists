@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block statics %}
+<!-- DataTables and jQuery -->
+<link rel="stylesheet" type="text/css" href="{% static "dt_pkg/DataTables-1.10.9/css/jquery.dataTables.min.css" %}"/>
+<link rel="stylesheet" type="text/css" href="{% static "dt_pkg/Responsive-1.0.7/css/responsive.dataTables.min.css" %}"/>
+<script type="text/javascript" src="{% static "dt_pkg/jQuery-2.1.4/jquery-2.1.4.min.js" %}"></script>
+<script type="text/javascript" src="{% static "dt_pkg/DataTables-1.10.9/js/jquery.dataTables.min.js" %}"></script>
+<script type="text/javascript" src="{% static "dt_pkg/Responsive-1.0.7/js/dataTables.responsive.min.js" %}"></script>
+{% endblock statics %}
+
+
