@@ -1,3 +1,7 @@
 html {
     font-family: 'Lato', sans-serif;
 }
+td a {
+    display: block;
+    width: 100%;
+}

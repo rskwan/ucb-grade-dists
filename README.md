@@ -47,6 +47,7 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 
 * Things that should be sortable, but aren't: terms, course/section numbers.
 * (QUESTION) Which classes/subjects have the highest/lowest averages/medians/stdevs?
+  * (QUESTION) What do people think are the hardest/easiest (maybe say "highest/lowest grades") classes on campus? Within their major? How well does this match up with reality?
 * Put a histogram (or similar chart) for each section (course? subject?).
   * The first two (section, course) are already covered by Berkeleytime and ScheduleBuilder for a lot of classes/terms, and it works pretty well.
   * Choice: grade points vs letter grades? We only use grade points in calculations, but maybe students care about A+ vs A- on their transcript.
