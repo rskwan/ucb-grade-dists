@@ -37,7 +37,7 @@ class Subject(models.Model):
     def __unicode__(self):
         return self.name
 
-    def save(self):
+    def save(self, **kwargs):
         total_grades = self.course_set.aggregate(Sum('total_grades'))['total_grades__sum']
         self.total_grades = 0 if total_grades is None else total_grades
         letter_grades = self.course_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
@@ -97,7 +97,7 @@ class Course(models.Model):
                       [section.letter_gp for section in self.section_set.all()],
                       np.array([]))
 
-    def save(self):
+    def save(self, **kwargs):
         # set numerical part of course number and division
         m = course_num_pattern.match(self.number)
         if m:
@@ -161,7 +161,7 @@ class Section(models.Model):
                                [[gc.grade.points] * gc.count for gc in letter_gc],
                                []))
 
-    def save(self):
+    def save(self, **kwargs):
         total_grades = self.gradecount_set.aggregate(Sum('count'))['count__sum']
         self.total_grades = 0 if total_grades is None else total_grades
         self.letter_grades = self.letter_gp.size
