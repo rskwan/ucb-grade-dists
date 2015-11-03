@@ -55,7 +55,11 @@
             {{ section.total_grades }}
           </td>
           <td>
+{% if section.total_grades > 0 %}
             {{ section.letter_grades|div:section.total_grades|mul:100|floatformat:0 }}
+{% else %}
+            N/A
+{% endif %}
           </td>
         </tr>
 {% empty %}

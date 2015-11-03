@@ -41,7 +41,11 @@ Subjects
             {{ subject.total_grades }}
           </td>
           <td>
+{% if subject.total_grades > 0 %}
             {{ subject.letter_grades|div:subject.total_grades|mul:100|floatformat:0 }}
+{% else %}
+            N/A
+{% endif %}
           </td>
         </tr>
 {% empty %}

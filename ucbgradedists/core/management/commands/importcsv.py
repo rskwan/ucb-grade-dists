@@ -18,8 +18,10 @@ def handle_helper(season, year, inname):
     # assumption: this csv only contains data for one term, so CCNs are unique
     term = Term.objects.get_or_create(season=season, year=year)[0]
 
-    # data maps CCN to a Section object
-    data = {}
+    # data['sections'] maps CCN to a Section object
+    data = {'sections': {},
+            'courses': set(),
+            'subjects': set() }
     with open(inname, 'r+') as infile:
         inreader = csv.reader(infile)
         indices = None
@@ -29,12 +31,18 @@ def handle_helper(season, year, inname):
                 indices = find_indices(header)
                 continue
             data = process_row(term, data, row, indices)
+    for section in data['sections'].values():
+        section.save()
+    for course in data['courses']:
+        course.save()
+    for subject in data['subjects']:
+        subject.save()
 
 def process_row(term, data, row, indices):
     """Find the section corresponding to ROW, create necessary objects,
     and add the grade count."""
     ccn = row[indices['ccn']]
-    if ccn not in data:
+    if ccn not in data['sections']:
         """
         Create all or any of the
         subject, course, section, grade, and grade count
@@ -50,7 +58,10 @@ def process_row(term, data, row, indices):
                                                 number=row[indices['section_num']],
                                                 instructor=row[indices['instructor']],
                                                 ccn=ccn)[0]
-        data[ccn] = section
+        section.save()
+        data['sections'][ccn] = section
+        data['subjects'].add(subject)
+        data['courses'].add(course)
     letter = row[indices['letter']] == "Letter Grade"
     points = row[indices['points']]
     points = float(points) if len(points) > 0 else None
@@ -58,9 +69,9 @@ def process_row(term, data, row, indices):
                                         letter=letter,
                                         points=points)[0]
     try:
-        gradecount = GradeCount.objects.get(section_id=data[ccn].id, grade_id=grade.id)
+        gradecount = GradeCount.objects.get(section_id=data['sections'][ccn].id, grade_id=grade.id)
     except ObjectDoesNotExist:
-        gradecount = GradeCount(section=data[ccn], grade=grade)
+        gradecount = GradeCount(section=data['sections'][ccn], grade=grade)
     gradecount.count = int(row[indices['count']])
     gradecount.save()
     return data

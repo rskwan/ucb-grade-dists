@@ -41,7 +41,11 @@
             {{ course.total_grades }}
           </td>
           <td>
+{% if course.total_grades > 0 %}
             {{ course.letter_grades|div:course.total_grades|mul:100|floatformat:0 }}
+{% else %}
+            N/A
+{% endif %}
           </td>
         </tr>
 {% empty %}
