@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from core.models import *
 from importcsv import handle_helper
+from computestats import compute_stats
 
 class Command(BaseCommand):
     help = """
@@ -28,3 +29,4 @@ class Command(BaseCommand):
                 year = int(path.split(prefixes[season])[-1][:4])
                 handle_helper(season, year, path)
                 print path
+        compute_stats(options['verbosity'])

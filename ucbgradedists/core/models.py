@@ -37,7 +37,7 @@ class Subject(models.Model):
     def __unicode__(self):
         return self.name
 
-    def save(self, *args, **kwargs):
+    def compute_stats(self):
         total_grades = self.course_set.aggregate(Sum('total_grades'))['total_grades__sum']
         self.total_grades = 0 if total_grades is None else total_grades
         letter_grades = self.course_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
@@ -52,7 +52,6 @@ class Subject(models.Model):
             self.grade_average = np.mean(subject_gp)
             self.grade_median = np.median(subject_gp)
             self.grade_stdev = np.std(subject_gp)
-        super(Subject, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ['name']
@@ -97,8 +96,21 @@ class Course(models.Model):
                       [section.letter_gp for section in self.section_set.all()],
                       np.array([]))
 
+    def compute_stats(self):
+        total_grades = self.section_set.aggregate(Sum('total_grades'))['total_grades__sum']
+        self.total_grades = 0 if total_grades is None else total_grades
+        letter_grades = self.section_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
+        self.letter_grades = 0 if letter_grades is None else letter_grades
+        if not letter_grades:
+            self.grade_average = None
+            self.grade_median = None
+            self.grade_stdev = None
+        else:
+            self.grade_average = np.mean(self.course_gp)
+            self.grade_median = np.median(self.course_gp)
+            self.grade_stdev = np.std(self.course_gp)
+
     def save(self, *args, **kwargs):
-        # set numerical part of course number and division
         m = course_num_pattern.match(self.number)
         if m:
             self.num_numerical_part = int(m.group(1))
@@ -120,19 +132,6 @@ class Course(models.Model):
                 self.division = self.OTHER
         else:
             self.division = self.OTHER
-        # grade statistics
-        total_grades = self.section_set.aggregate(Sum('total_grades'))['total_grades__sum']
-        self.total_grades = 0 if total_grades is None else total_grades
-        letter_grades = self.section_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
-        self.letter_grades = 0 if letter_grades is None else letter_grades
-        if not letter_grades:
-            self.grade_average = None
-            self.grade_median = None
-            self.grade_stdev = None
-        else:
-            self.grade_average = np.mean(self.course_gp)
-            self.grade_median = np.median(self.course_gp)
-            self.grade_stdev = np.std(self.course_gp)
         super(Course, self).save(*args, **kwargs)
 
     class Meta:
@@ -161,7 +160,7 @@ class Section(models.Model):
                                [[gc.grade.points] * gc.count for gc in letter_gc],
                                []))
 
-    def save(self, *args, **kwargs):
+    def compute_stats(self):
         total_grades = self.gradecount_set.aggregate(Sum('count'))['count__sum']
         self.total_grades = 0 if total_grades is None else total_grades
         self.letter_grades = self.letter_gp.size
@@ -173,7 +172,6 @@ class Section(models.Model):
             self.grade_average = np.mean(self.letter_gp)
             self.grade_median = np.median(self.letter_gp)
             self.grade_stdev = np.std(self.letter_gp)
-        super(Section, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ['term', 'number']

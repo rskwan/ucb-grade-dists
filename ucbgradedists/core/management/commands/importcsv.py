@@ -2,6 +2,7 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import *
+from computestats import compute_stats
 
 class Command(BaseCommand):
     help = "Imports grade distribution data from a Cal Answers CSV file"
@@ -12,16 +13,14 @@ class Command(BaseCommand):
         parser.add_argument('inname', help="path to the csv file to read")
 
     def handle(self, *args, **options):
-        handle_helper(options['season'], options['year'], options['inname'])
+        term = handle_helper(options['season'], options['year'], options['inname'])
+        compute_stats(options['verbosity'], term)
 
 def handle_helper(season, year, inname):
     # assumption: this csv only contains data for one term, so CCNs are unique
     term = Term.objects.get_or_create(season=season, year=year)[0]
-
     # data['sections'] maps CCN to a Section object
-    data = {'sections': {},
-            'courses': set(),
-            'subjects': set() }
+    data = {'sections': {}}
     with open(inname, 'r+') as infile:
         inreader = csv.reader(infile)
         indices = None
@@ -31,12 +30,7 @@ def handle_helper(season, year, inname):
                 indices = find_indices(header)
                 continue
             data = process_row(term, data, row, indices)
-    for section in data['sections'].values():
-        section.save()
-    for course in data['courses']:
-        course.save()
-    for subject in data['subjects']:
-        subject.save()
+    return term
 
 def process_row(term, data, row, indices):
     """Find the section corresponding to ROW, create necessary objects,
@@ -60,8 +54,6 @@ def process_row(term, data, row, indices):
                                                 ccn=ccn)[0]
         section.save()
         data['sections'][ccn] = section
-        data['subjects'].add(subject)
-        data['courses'].add(course)
     letter = row[indices['letter']] == "Letter Grade"
     points = row[indices['points']]
     points = float(points) if len(points) > 0 else None
