@@ -36,12 +36,12 @@ def compute_stats(verbosity, term=None):
                 section.compute_stats()
                 processed_sections += 1
                 if verbosity >= 3:
-                    print "{0} of {1} sections processed ({2:.2f}%)".format(
+                    print "compute_stats: {0} of {1} sections processed ({2:.2f}%)".format(
                           processed_sections, total_sections,
                           100 * (processed_sections / total_sections))
             course.compute_stats()
             if verbosity >= 2:
-                print course
+                print "compute stats: processed course {}".format(course)
         subject.compute_stats()
         if verbosity >= 1:
-            print subject
+            print "compute_stats: processed subject {}".format(subject)

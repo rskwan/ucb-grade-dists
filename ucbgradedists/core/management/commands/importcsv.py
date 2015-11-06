@@ -13,10 +13,13 @@ class Command(BaseCommand):
         parser.add_argument('inname', help="path to the csv file to read")
 
     def handle(self, *args, **options):
-        term = handle_helper(options['season'], options['year'], options['inname'])
+        term = create_objects(options['season'], options['year'],
+                              options['inname'], options['verbosity'])
+        if verbosity >= 1:
+            print "finished creating objects, now computing statistics"
         compute_stats(options['verbosity'], term)
 
-def handle_helper(season, year, inname):
+def create_objects(season, year, inname, verbosity):
     # assumption: this csv only contains data for one term, so CCNs are unique
     term = Term.objects.get_or_create(season=season, year=year)[0]
     # data['sections'] maps CCN to a Section object
@@ -24,12 +27,16 @@ def handle_helper(season, year, inname):
     with open(inname, 'r+') as infile:
         inreader = csv.reader(infile)
         indices = None
+        processed = 0
         for row in inreader:
             if indices is None:
                 header = [s.replace('\xef\xbb\xbf', '') for s in row]
                 indices = find_indices(header)
                 continue
             data = process_row(term, data, row, indices)
+            processed += 1
+            if verbosity >= 1:
+                print "object creation: {} rows processed".format(processed)
     return term
 
 def process_row(term, data, row, indices):
