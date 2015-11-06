@@ -13,11 +13,12 @@ class Command(BaseCommand):
         parser.add_argument('inname', help="path to the csv file to read")
 
     def handle(self, *args, **options):
+        verbosity = options['verbosity']
         term = create_objects(options['season'], options['year'],
-                              options['inname'], options['verbosity'])
+                              options['inname'], verbosity)
         if verbosity >= 1:
             print "finished creating objects, now computing statistics"
-        compute_stats(options['verbosity'], term)
+        compute_stats(verbosity, term)
 
 def create_objects(season, year, inname, verbosity):
     # assumption: this csv only contains data for one term, so CCNs are unique
@@ -36,7 +37,8 @@ def create_objects(season, year, inname, verbosity):
             data = process_row(term, data, row, indices)
             processed += 1
             if verbosity >= 1:
-                print "object creation: {} rows processed".format(processed)
+                if processed % 10 == 0 or verbosity >= 3:
+                    print "object creation: {} rows processed".format(processed)
     return term
 
 def process_row(term, data, row, indices):
