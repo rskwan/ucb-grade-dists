@@ -34,14 +34,17 @@ def compute_stats(verbosity, term=None):
                 sec_set = course.section_set.filter(term=term)
             for section in sec_set:
                 section.compute_stats()
+                section.save()
                 processed_sections += 1
                 if verbosity >= 3:
                     print "compute_stats: {0} of {1} sections processed ({2:.2f}%)".format(
                           processed_sections, total_sections,
                           100 * (processed_sections / total_sections))
             course.compute_stats()
+            course.save()
             if verbosity >= 2:
                 print "compute stats: processed course {}".format(course)
         subject.compute_stats()
+        subject.save()
         if verbosity >= 1:
             print "compute_stats: processed subject {}".format(subject)
