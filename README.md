@@ -35,6 +35,11 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 * Run `heroku run python ucbgradedists/manage.py migrate` to create the tables.
 * (TODO) Eventually, we'll have an admin/superuser page to import CSV data.
 
+### Things You Might Want to Do After a (Big) Commit
+
+* Install new requirements: `pip install -r requirements.txt`
+* Run migrations: `python manage.py migrate`
+
 ## Functionality
 
 ### Current
