@@ -3,7 +3,7 @@ import csv
 
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
-from core.models import Subject, SubjectStats, DivisionSet
+from core.models import Subject, SubjectStats, DivisionSet, init_division_sets
 
 class Command(BaseCommand):
     help = "Computes statistics for subjects and division sets"
@@ -17,6 +17,8 @@ def compute_div_stats(verbosity):
         0: no output to console
         1: prints division set and subject once completed
     """
+    if DivisionSet.objects.count == 0:
+        init_division_sets()
     for subject in Subject.objects.all():
         for division_set in DivisionSet.objects.all():
             stats = SubjectStats.objects.get_or_create(subject=subject,
