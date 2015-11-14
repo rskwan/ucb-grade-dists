@@ -8,7 +8,7 @@ Subjects
 {% block content %}
 <div class="col-1-1">
   <div class="content">
-    <h1>Subjects</h1>
+    <h1>Subjects ({{ divset.name }})</h1>
     <table id="subjects" class="display responsive nowrap" cellspacing="0" width="100%">
       <thead>
         <tr>
@@ -21,28 +21,28 @@ Subjects
         </tr>
       </thead>
       <tbody>
-{% for subject in object_list %}
+{% for stats in object_list %}
         <tr>
           <td>
-            <a href="{% url 'subject-course-list' subject.id %}">
-              {{ subject }}
+            <a href="{% url 'div-subject-course-list' stats.division_set.id stats.subject.id %}">
+              {{ stats.subject.name }}
             </a>
           </td>
           <td>
-            {{ subject.grade_median|floatformat:2|default:"N/A" }}
+            {{ stats.grade_median|floatformat:2|default:"N/A" }}
           </td>
           <td>
-            {{ subject.grade_average|floatformat:2|default:"N/A" }}
+            {{ stats.grade_average|floatformat:2|default:"N/A" }}
           </td>
           <td>
-            {{ subject.grade_stdev|floatformat:2|default:"N/A" }}
+            {{ stats.grade_stdev|floatformat:2|default:"N/A" }}
           </td>
           <td>
-            {{ subject.total_grades }}
+            {{ stats.total_grades }}
           </td>
           <td>
-{% if subject.total_grades > 0 %}
-            {{ subject.letter_grades|div:subject.total_grades|mul:100|floatformat:0 }}
+{% if stats.total_grades > 0 %}
+            {{ stats.letter_grades|div:stats.total_grades|mul:100|floatformat:0 }}
 {% else %}
             N/A
 {% endif %}

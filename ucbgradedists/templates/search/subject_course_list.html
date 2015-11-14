@@ -8,7 +8,9 @@
 {% block content %}
 <div class="col-1-1">
   <div class="content">
-    <h1><a href="{% url 'subject-list' %}">Subjects</a> > {{ object }}</h1>
+    <h1>
+      {{ object }} ({{ divset.name }})
+    </h1>
     <table id="courses" class="display responsive nowrap" cellspacing="0" width="100%">
       <thead>
         <tr>

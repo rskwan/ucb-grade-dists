@@ -5,6 +5,7 @@ from functools import cmp_to_key
 from django.db import models
 from django.db.models import Sum
 from django.utils.functional import cached_property
+from django_extensions.db.fields import json
 
 course_num_pattern = re.compile('[A-Za-z]*([0-9]+)[A-Za-z]*')
 
@@ -26,8 +27,35 @@ class Term(models.Model):
     class Meta:
         ordering = ['year', 'season']
 
+class DivisionSet(models.Model):
+    name = models.CharField(max_length=256)
+    # data is a json field consisting exactly of
+    # { 'divisions' : [ list of divisions ] }
+    data = json.JSONField()
+
+    def __unicode__(self):
+        return "{0}: {1}".format(self.name, self.divisions_verbose)
+
+    @property
+    def divisions_verbose(self):
+        return [Course.DIVISION_CHOICE_DICT[div] for div in self.data['divisions']]
+
+    @property
+    def divisions_str(self):
+        return ', '.join(self.divisions_verbose)
+
 class Subject(models.Model):
     name = models.CharField(max_length=256)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+class SubjectStats(models.Model):
+    subject = models.ForeignKey(Subject)
+    division_set = models.ForeignKey(DivisionSet)
     total_grades = models.IntegerField(default=0)
     letter_grades = models.IntegerField(default=0)
     grade_average = models.FloatField(null=True)
@@ -35,26 +63,41 @@ class Subject(models.Model):
     grade_stdev = models.FloatField(null=True)
 
     def __unicode__(self):
-        return self.name
+        return "SubjectStats({0}, {1})".\
+               format(self.subject, self.division_set.name)
 
-    def compute_stats(self):
-        total_grades = self.course_set.aggregate(Sum('total_grades'))['total_grades__sum']
+    def letter_gc(self):
+        """Returns a dictionary with (K, V) = (letter grade name, count) over
+        all courses in the division set."""
+        total_gc = {}
+        courses = self.subject.course_set.\
+                  filter(division__in=division_set.data['divisions'])
+        for course in courses:
+            course_gc = course.letter_gc()
+            for name, count in course_gc:
+                if name not in total_gc:
+                    total_gc[name] = count
+                else:
+                    total_gc[name] += count
+        return total_gc
+
+    def compute(self):
+        divisions = self.division_set.data['divisions']
+        courses = self.subject.course_set.filter(division__in=divisions)
+        total_grades = self.subject.course_set.filter(division__in=divisions).\
+                       aggregate(Sum('total_grades'))['total_grades__sum']
+        letter_grades = self.subject.course_set.filter(division__in=divisions).\
+                        aggregate(Sum('letter_grades'))['letter_grades__sum']
         self.total_grades = 0 if total_grades is None else total_grades
-        letter_grades = self.course_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
         self.letter_grades = 0 if letter_grades is None else letter_grades
-        if not letter_grades:
-            self.grade_average = None
-            self.grade_median = None
-            self.grade_stdev = None
-        else:
-            subject_gp = reduce(np.append,
-                                [course.course_gp for course in self.course_set.all()])
-            self.grade_average = np.mean(subject_gp)
-            self.grade_median = np.median(subject_gp)
-            self.grade_stdev = np.std(subject_gp)
+        if self.letter_grades > 0:
+            letter_gp = reduce(np.append, [course.letter_gp for course in courses])
+            self.grade_average = np.mean(letter_gp)
+            self.grade_median = np.median(letter_gp)
+            self.grade_stdev = np.std(letter_gp)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['subject__name', 'division_set__name']
 
 class Course(models.Model):
     LOWER = 0
@@ -75,6 +118,7 @@ class Course(models.Model):
         (DOCTORAL, "Doctoral Exam"),
         (OTHER, "Other")
     )
+    DIVISION_CHOICE_DICT = dict(DIVISION_CHOICES)
 
     subject = models.ForeignKey(Subject)
     title = models.TextField()
@@ -90,11 +134,24 @@ class Course(models.Model):
     def __unicode__(self):
         return "{0} {1}".format(self.subject, self.number)
 
-    @cached_property
-    def course_gp(self):
+    def letter_gp(self):
         return reduce(np.append,
                       [section.letter_gp for section in self.section_set.all()],
                       np.array([]))
+
+    def letter_gc(self):
+        """Returns a dictionary with (K, V) = (letter grade name, count) over
+        all sections in the course."""
+        total_gc = {}
+        for section in self.section_set.all():
+            sec_gc = section.gradecount_set.filter(grade__letter=True)
+            for gc in sec_gc:
+                name = gc.grade.name
+                if name not in total_gc:
+                    total_gc[name] = gc.count
+                else:
+                    total_gc[name] += gc.count
+        return total_gc
 
     def compute_stats(self):
         total_grades = self.section_set.aggregate(Sum('total_grades'))['total_grades__sum']
@@ -106,9 +163,9 @@ class Course(models.Model):
             self.grade_median = None
             self.grade_stdev = None
         else:
-            self.grade_average = np.mean(self.course_gp)
-            self.grade_median = np.median(self.course_gp)
-            self.grade_stdev = np.std(self.course_gp)
+            self.grade_average = np.mean(self.letter_gp)
+            self.grade_median = np.median(self.letter_gp)
+            self.grade_stdev = np.std(self.letter_gp)
 
     def save(self, *args, **kwargs):
         m = course_num_pattern.match(self.number)
@@ -152,7 +209,6 @@ class Section(models.Model):
     def __unicode__(self):
         return "{0}-{1} ({2})".format(self.course, self.number, self.term)
 
-    @cached_property
     def letter_gp(self):
         """Returns a NumPy array of grade points."""
         letter_gc = self.gradecount_set.filter(grade__letter=True)
@@ -201,6 +257,37 @@ class GradeCount(models.Model):
 
     objects = GradeCountManager()
 
+def init_divsets():
+    DivisionSet.objects.bulk_create([
+        DivisionSet(name="Lower Division",
+                    data={'divisions': [Course.LOWER]}),
+        DivisionSet(name="Upper Division",
+                    data={'divisions': [Course.UPPER]}),
+        DivisionSet(name="Undergraduate",
+                    data={'divisions': [Course.LOWER, Course.UPPER]}),
+        DivisionSet(name="Graduate",
+                    data={'divisions': [Course.GRADUATE]}),
+        DivisionSet(name="Other",
+                    data={'divisions': [Course.TEACHING,
+                                        Course.PROFESSIONAL,
+                                        Course.MASTERS,
+                                        Course.DOCTORAL,
+                                        Course.OTHER]}),
+        DivisionSet(name="All",
+                    data={'divisions': [tup[0] for tup in Course.DIVISION_CHOICES]}),
+    ])
+
+def grade_order_key(grade_name):
+    ordering = ['A+', 'A', 'A-', 'B+', 'B', 'B-',
+                'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F',
+                'High Honors', 'Honors',
+                'Pass', 'Pass Conditional',
+                'Credit', 'Satisfactory',
+                'No Credit', 'Not Pass', 'Unsatisfactory']
+    if grade_name not in ordering:
+        return -1
+    return ordering.index(grade_name)
+
 def cmp_grade(grade1, grade2):
     """Return 0 for equal grades, 1 if grade1 > grade2, or -1 if grade1 < grade2."""
     if grade1 == grade2:
@@ -210,17 +297,8 @@ def cmp_grade(grade1, grade2):
     elif grade2.letter and not grade1.letter:
         return -1
     else:
-        ordering = ['A+', 'A', 'A-', 'B+', 'B', 'B-',
-                    'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F',
-                    'High Honors', 'Honors',
-                    'Pass', 'Pass Conditional',
-                    'Credit', 'Satisfactory',
-                    'No Credit', 'Not Pass', 'Unsatisfactory']
-        idx1 = idx2 = -1
-        if grade1.name in ordering:
-            idx1 = ordering.index(grade1.name)
-        if grade2.name in ordering:
-            idx2 = ordering.index(grade2.name)
+        idx1 = grade_order_key(grade1.name)
+        idx2 = grade_order_key(grade2.name)
         if idx1 == idx2:
             return 0
         elif idx1 < idx2:

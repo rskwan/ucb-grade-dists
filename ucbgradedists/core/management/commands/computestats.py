@@ -4,15 +4,17 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import *
+from computedivstats import compute_div_stats
 
 class Command(BaseCommand):
     help = "Computes statistics for grades"
 
     def handle(self, *args, **options):
         compute_stats(options['verbosity'])
+        compute_div_stats(options['verbosity'])
 
 def compute_stats(verbosity, term=None):
-    """Computes statistics for subjects, courses, and sections. If
+    """Computes statistics for courses and sections. If
     TERM is None (default), we look at all sections, and otherwise
     we only update the sections for that term.
     Verbosity ranges from
@@ -44,7 +46,5 @@ def compute_stats(verbosity, term=None):
             course.save()
             if verbosity >= 2:
                 print "compute stats: processed course {}".format(course)
-        subject.compute_stats()
-        subject.save()
         if verbosity >= 1:
-            print "compute_stats: processed subject {}".format(subject)
+            print "compute_stats: processed all courses in subject {}".format(subject)

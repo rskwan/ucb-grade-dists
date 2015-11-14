@@ -41,25 +41,25 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
 
 * Importing grade distributions from Cal Answers CSV output.
 * A RESTful API (via Tastypie) to access this data at `/api/v1/`. Check out [the Tastypie docs](http://django-tastypie.readthedocs.org/en/latest/) to figure out how to work with this!
-* A basic UI for accessing our data at `/search/subjects/`. This includes basic grade statistics -- average, standard deviation, median -- for each subject, course, and section. Thanks to DataTables, it's (mostly) sortable and searchable.
+* A basic UI for accessing our data at `/search/divisionsets/`.
+  * We can browse data in terms of DivisionSets, which are sets of divisions (e.g. upper, lower, graduate) on which we compute subject-wide statistics.
+  * This includes basic grade statistics -- average, standard deviation, median -- for each subject, course, and section. Thanks to DataTables, it's (mostly) sortable and searchable.
 
 ### Future
 
 * Things that should be sortable, but aren't: terms, course/section numbers.
 * (QUESTION) Which classes/subjects have the highest/lowest averages/medians/stdevs?
-  * (QUESTION) What do people think are the hardest/easiest (maybe say "highest/lowest grades") classes on campus? Within their major? How well does this match up with reality?
+* (QUESTION) What do people think are the hardest/easiest (maybe say "highest/lowest grades") classes on campus? Within their major? How well does this match up with reality?
 * Put a histogram (or similar chart) for each section (course? subject?).
   * The first two (section, course) are already covered by Berkeleytime and ScheduleBuilder for a lot of classes/terms, and it works pretty well.
   * Choice: grade points vs letter grades? We only use grade points in calculations, but maybe students care about A+ vs A- on their transcript.
 * Calculate some statistics.
   * What percentile do you need to be at to get a certain letter grade, per section?
     * (Maybe) This could be useful for a course-level view, and interesting (if unhelpful) for a subject-level view.
-  * For a given subject, separate statistics by:
-    * Division: most people only really care about lower/upper div, maybe graduate classes.
-      * (QUESTION) How different are distributions for lower vs upper vs graduate?
-    * Term: summer vs fall/spring.
-      * (QUESTION) How different are summer grades from fall/spring grades?
-      * (QUESTION, maybe) Are fall and spring grades different?
+  * (QUESTION) How different are distributions for lower vs upper vs graduate?
+  * For a given subject, separate statistics by term: summer vs fall/spring.
+    * (QUESTION) How different are summer grades from fall/spring grades?
+    * (QUESTION, maybe) Are fall and spring grades different?
 * Group by instructor.
   * (Maybe) Create a model for Instructor (with a many-to-many field in Section).
     * Problem: distinct people can have the same name.

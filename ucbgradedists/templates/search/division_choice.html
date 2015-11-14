@@ -1,0 +1,46 @@
+{% extends "dt_base.html" %}
+
+{% block subtitle %}
+Divisions
+{% endblock subtitle %}
+
+{% block content %}
+<div class="col-1-1">
+  <div class="content">
+    <h1>Division Sets</h1>
+    <table id="divisionsets" class="display responsive nowrap" cellspacing="0" width="100%">
+      <thead>
+        <tr>
+          <th>Set</th>
+          <th>Divisions</th>
+        </tr>
+      </thead>
+      <tbody>
+{% for divset in object_list %}
+        <tr>
+          <td>
+            <a href="{% url 'div-subject-list' divset.id %}">
+              {{ divset.name }}
+            </a>
+          </td>
+          <td>
+            {{ divset.divisions_str }}
+          </td>
+        </tr>
+{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('#divisionsets').DataTable( {
+            "order": [],
+            "columnDefs": [
+                { "orderable": false, "targets": 1 }
+            ],
+            "paging": false
+        } );
+    } );
+</script>
+{% endblock content %}

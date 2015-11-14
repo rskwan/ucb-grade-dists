@@ -1,11 +1,37 @@
 from django.shortcuts import get_object_or_404
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, TemplateView, RedirectView
 
-from core.models import Term, Subject, Course, Section, Grade, GradeCount
+from core.models import Term, DivisionSet, Subject, SubjectStats, \
+                        Course, Section, Grade, GradeCount, init_divsets
+
+class DivisionChoiceView(ListView):
+    template_name = 'search/division_choice.html'
+
+    def get_queryset(self):
+        if DivisionSet.objects.count() == 0:
+            init_divsets()
+        return DivisionSet.objects.all()
+
+class SubjectListRedirectView(RedirectView):
+    query_string = True
+    pattern_name = 'div-subject-list'
 
 class SubjectListView(ListView):
-    model = Subject
     template_name = 'search/subject_list.html'
+
+    def get_queryset(self):
+        if 'divsetpk' in self.kwargs:
+            self.division_set = get_object_or_404(DivisionSet, pk=int(self.kwargs['divsetpk']))
+        else:
+            if DivisionSet.objects.count() == 0:
+                init_divsets()
+            self.division_set = get_object_or_404(DivisionSet, name="All")
+        return SubjectStats.objects.filter(division_set=self.division_set)
+
+    def get_context_data(self, **kwargs):
+        context = super(SubjectListView, self).get_context_data(**kwargs)
+        context['divset'] = self.division_set
+        return context
 
 class SubjectCourseView(DetailView):
     model = Subject
@@ -13,7 +39,15 @@ class SubjectCourseView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(SubjectCourseView, self).get_context_data(**kwargs)
-        context['courses'] = self.object.course_set.all()
+        if 'divsetpk' in self.kwargs:
+            divset = get_object_or_404(DivisionSet, pk=int(self.kwargs['divsetpk']))
+        else:
+            if DivisionSet.objects.count() == 0:
+                init_divsets()
+            divset = get_object_or_404(DivisionSet, name="All")
+        context['divset'] = divset
+        context['courses'] = self.object.course_set.\
+                             filter(division__in=divset.data['divisions'])
         return context
 
 class CourseSectionView(DetailView):
