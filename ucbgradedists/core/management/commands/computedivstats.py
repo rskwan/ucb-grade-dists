@@ -17,7 +17,7 @@ def compute_div_stats(verbosity):
         0: no output to console
         1: prints division set and subject once completed
     """
-    if DivisionSet.objects.count == 0:
+    if DivisionSet.objects.count() == 0:
         init_division_sets()
     for subject in Subject.objects.all():
         for division_set in DivisionSet.objects.all():
