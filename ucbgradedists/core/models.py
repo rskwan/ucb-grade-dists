@@ -257,7 +257,7 @@ class GradeCount(models.Model):
 
     objects = GradeCountManager()
 
-def init_divsets():
+def init_division_sets():
     DivisionSet.objects.bulk_create([
         DivisionSet(name="Lower Division",
                     data={'divisions': [Course.LOWER]}),

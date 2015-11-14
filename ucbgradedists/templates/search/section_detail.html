@@ -1,34 +1,34 @@
 {% extends "base.html" %}
 
 {% block subtitle %}
-{{ object }}
+{{ section }}
 {% endblock subtitle %}
 
 {% block content %}
-<h1>{{ object }}</h1>
+<h1>{{ section }}</h1>
 <div class="col-1-3">
   <div class="content">
     <h2>Information/Statistics</h2>
     <table cellspacing="0" width="100%">
       <tr>
         <th>Instructor(s)</th>
-        <td>{{ object.instructor }}</td>
+        <td>{{ section.instructor }}</td>
       </tr>
       <tr>
         <th>Median</th>
-        <td>{{ object.grade_median|floatformat:2|default:"N/A" }}</td>
+        <td>{{ section.grade_median|floatformat:2|default:"N/A" }}</td>
       </tr>
       <tr>
         <th>Mean</th>
-        <td>{{ object.grade_average|floatformat:2|default:"N/A" }}</td>
+        <td>{{ section.grade_average|floatformat:2|default:"N/A" }}</td>
       </tr>
       <tr>
         <th>Standard Deviation</th>
-        <td>{{ object.grade_stdev|floatformat:2|default:"N/A" }}</td>
+        <td>{{ section.grade_stdev|floatformat:2|default:"N/A" }}</td>
       </tr>
       <tr>
         <th>Letter Grades</th>
-        <td>{{ object.letter_grades }} of {{ object.total_grades }}</td>
+        <td>{{ section.letter_grades }} of {{ section.total_grades }}</td>
       </tr>
     </table>
   </div>

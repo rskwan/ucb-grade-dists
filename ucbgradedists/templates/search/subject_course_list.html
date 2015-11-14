@@ -2,14 +2,14 @@
 {% load mathfilters %}
 
 {% block subtitle %}
-{{ object }}
+{{ subject }} ({{ division_set.name }})
 {% endblock subtitle %}
 
 {% block content %}
 <div class="col-1-1">
   <div class="content">
     <h1>
-      {{ object }} ({{ divset.name }})
+      {{ subject }} ({{ division_set.name }})
     </h1>
     <table id="courses" class="display responsive nowrap" cellspacing="0" width="100%">
       <thead>

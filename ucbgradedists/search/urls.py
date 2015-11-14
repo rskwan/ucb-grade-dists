@@ -4,12 +4,12 @@ from search.views import *
 
 urlpatterns = [
     url(r'^divisionsets/$',
-        DivisionChoiceView.as_view(), name='division-choice'),
-    url(r'^divisionsets/(?P<divsetpk>[0-9]+)/$',
-        SubjectListRedirectView.as_view()),
-    url(r'^divisionsets/(?P<divsetpk>[0-9]+)/subjects/$',
-        SubjectListView.as_view(), name='div-subject-list'),
-    url(r'^divisionsets/(?P<divsetpk>[0-9]+)/subjects/(?P<pk>[0-9]+)/$',
+        DivisionSetListView.as_view(), name='divisionset-list'),
+    url(r'^divisionsets/(?P<division_set_pk>[0-9]+)/$',
+        SubjectStatsListRedirectView.as_view()),
+    url(r'^divisionsets/(?P<division_set_pk>[0-9]+)/subjects/$',
+        SubjectStatsListView.as_view(), name='div-subject-stats-list'),
+    url(r'^divisionsets/(?P<division_set_pk>[0-9]+)/subjects/(?P<pk>[0-9]+)/$',
         SubjectCourseView.as_view(), name='div-subject-course-list'),
     url(r'^subjects/(?P<pk>[0-9]+)/$',
         SubjectCourseView.as_view(), name='subject-course-list'),

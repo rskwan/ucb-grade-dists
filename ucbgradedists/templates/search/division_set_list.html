@@ -16,15 +16,15 @@ Divisions
         </tr>
       </thead>
       <tbody>
-{% for divset in object_list %}
+{% for division_set in division_set_list %}
         <tr>
           <td>
-            <a href="{% url 'div-subject-list' divset.id %}">
-              {{ divset.name }}
+            <a href="{% url 'div-subject-stats-list' division_set.id %}">
+              {{ division_set.name }}
             </a>
           </td>
           <td>
-            {{ divset.divisions_str }}
+            {{ division_set.divisions_str }}
           </td>
         </tr>
 {% endfor %}
