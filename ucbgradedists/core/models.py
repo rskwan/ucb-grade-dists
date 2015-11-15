@@ -91,7 +91,7 @@ class SubjectStats(models.Model):
         self.total_grades = 0 if total_grades is None else total_grades
         self.letter_grades = 0 if letter_grades is None else letter_grades
         if self.letter_grades > 0:
-            letter_gp = reduce(np.append, [course.letter_gp for course in courses])
+            letter_gp = reduce(np.append, [course.letter_gp() for course in courses])
             self.grade_average = np.mean(letter_gp)
             self.grade_median = np.median(letter_gp)
             self.grade_stdev = np.std(letter_gp)
@@ -136,7 +136,7 @@ class Course(models.Model):
 
     def letter_gp(self):
         return reduce(np.append,
-                      [section.letter_gp for section in self.section_set.all()],
+                      [section.letter_gp() for section in self.section_set.all()],
                       np.array([]))
 
     def letter_gc(self):
