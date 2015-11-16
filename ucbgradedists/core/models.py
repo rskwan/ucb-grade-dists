@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from collections import Counter
 from functools import cmp_to_key
 
 from django.db import models
@@ -61,24 +62,58 @@ class SubjectStats(models.Model):
     grade_average = models.FloatField(null=True)
     grade_median = models.FloatField(null=True)
     grade_stdev = models.FloatField(null=True)
+    term_averages = json.JSONField(null=True)
+    grade_counts = json.JSONField(null=True)
 
     def __unicode__(self):
         return "SubjectStats({0}, {1})".\
                format(self.subject, self.division_set.name)
 
+    def letter_gp_term(self, term):
+        """Returns array of grade points for all sections in a particular term
+        for a particular subject in a particular division set.
+        """
+        courses = self.subject.course_set.filter(
+                    division__in=self.division_set.data['divisions'])
+        return reduce(np.append,
+                      [course.letter_gp_term(term) for course in courses],
+                      np.array([]))
+
+    def compute_term_average(self, term):
+        """Returns dict of mean grade point and count of letter grades for
+        a particular term in this subject in this division set.
+        """
+        letter_gp = self.letter_gp_term(term)
+        if letter_gp.any():
+            mean = round(np.mean(letter_gp), 2)
+            count = len(letter_gp)
+        else:
+            mean = 0
+            count = 0
+        return {
+            'mean': mean,
+            'count': count
+        }
+
+    def compute_term_averages(self):
+        """Returns dict of verbose term name to mean grade point and and count
+        for this subject in this diviion set.
+        """
+        def get_term_str(term):
+            return '{}-{}'.format(term.year, term.season)
+
+        return {get_term_str(term): self.compute_term_average(term) for term in \
+                Term.objects.all()}
+
     def letter_gc(self):
-        """Returns a dictionary with (K, V) = (letter grade name, count) over
-        all courses in the division set."""
-        total_gc = {}
+        """Returns a Counter with (K, V) = (letter grade name, count) over
+        all courses in the division set.
+        """
+        total_gc = Counter()
         courses = self.subject.course_set.\
-                  filter(division__in=division_set.data['divisions'])
+                  filter(division__in=self.division_set.data['divisions'])
         for course in courses:
-            course_gc = course.letter_gc()
-            for name, count in course_gc:
-                if name not in total_gc:
-                    total_gc[name] = count
-                else:
-                    total_gc[name] += count
+            total_gc += course.letter_gc()
         return total_gc
 
     def compute(self):
@@ -92,14 +127,22 @@ class SubjectStats(models.Model):
         self.letter_grades = 0 if letter_grades is None else letter_grades
         if self.letter_grades > 0:
             letter_gp = reduce(np.append, [course.letter_gp() for course in courses])
-            self.grade_average = np.mean(letter_gp)
+            self.grade_average = round(np.mean(letter_gp), 2)
             self.grade_median = np.median(letter_gp)
-            self.grade_stdev = np.std(letter_gp)
+            self.grade_stdev = round(np.std(letter_gp), 2)
+            self.term_averages = self.compute_term_averages()
+            self.grade_counts = dict(self.letter_gc())
+
 
     class Meta:
         ordering = ['subject__name', 'division_set__name']
 
 class Course(models.Model):
+    """
+    A single course, belonging to a particular division, with
+    many sections offered over multiple terms.
+    """
+
     LOWER = 0
     UPPER = 1
     GRADUATE = 2
@@ -134,23 +177,31 @@ class Course(models.Model):
     def __unicode__(self):
         return "{0} {1}".format(self.subject, self.number)
 
+    def letter_gp_term(self, term):
+        """
+        Returns array of grade points for all sections in a particular
+        term."""
+        term_set = self.section_set.filter(term=term)
+        return reduce(np.append,
+                      [section.letter_gp() for section in term_set],
+                      np.array([]))
+
     def letter_gp(self):
+        """
+        Returns array of grade points for all sections."""
         return reduce(np.append,
                       [section.letter_gp() for section in self.section_set.all()],
                       np.array([]))
 
     def letter_gc(self):
-        """Returns a dictionary with (K, V) = (letter grade name, count) over
+        """Returns a Counter with (K, V) = (letter grade name, count) over
         all sections in the course."""
-        total_gc = {}
+        total_gc = Counter()
         for section in self.section_set.all():
             sec_gc = section.gradecount_set.filter(grade__letter=True)
             for gc in sec_gc:
                 name = gc.grade.name
-                if name not in total_gc:
-                    total_gc[name] = gc.count
-                else:
-                    total_gc[name] += gc.count
+                total_gc[name] += gc.count
         return total_gc
 
     def compute_stats(self):

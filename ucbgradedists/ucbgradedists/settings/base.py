@@ -49,6 +49,12 @@ STATICFILES_DIRS = (
     BASE_DIR.child("static"),
 )
 
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'sass_processor.finders.CssFinder',
+)
+
 # Application definition
 
 INSTALLED_APPS = (
@@ -58,8 +64,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'tastypie',
     'mathfilters',
+    'sass_processor',
     'django_extensions',
     'core',
     'search',

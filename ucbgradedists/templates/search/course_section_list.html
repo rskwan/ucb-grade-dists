@@ -1,4 +1,5 @@
 {% extends "dt_base.html" %}
+{% load humanize %}
 {% load mathfilters %}
 
 {% block subtitle %}
@@ -6,8 +7,7 @@
 {% endblock subtitle %}
 
 {% block content %}
-<div class="col-1-1">
-  <div class="content">
+
     <h1>{{ course }}</h1>
     <table id="sections" class="display responsive nowrap" cellspacing="0" width="100%">
       <thead>
@@ -15,11 +15,9 @@
           <th>Section</th>
           <th>Term</th>
           <th>Instructor(s)</th>
-          <th>Median</th>
           <th>Mean</th>
           <th>St. Dev.</th>
           <th>Grades</th>
-          <th>% Letter</th>
         </tr>
       </thead>
       <tbody>
@@ -37,23 +35,13 @@
             {{ section.instructor }}
           </td>
           <td>
-            {{ section.grade_median|floatformat:2|default:"N/A" }}
+            {{ section.grade_average|floatformat:2|default:"&mdash;" }}
           </td>
           <td>
-            {{ section.grade_average|floatformat:2|default:"N/A" }}
+            {{ section.grade_stdev|floatformat:2|default:"&mdash;" }}
           </td>
           <td>
-            {{ section.grade_stdev|floatformat:2|default:"N/A" }}
-          </td>
-          <td>
-            {{ section.total_grades }}
-          </td>
-          <td>
-{% if section.total_grades > 0 %}
-            {{ section.letter_grades|div:section.total_grades|mul:100|floatformat:0 }}
-{% else %}
-            N/A
-{% endif %}
+            {{ section.total_grades|intcomma }}
           </td>
         </tr>
 {% empty %}
@@ -70,8 +58,7 @@
 {% endfor %}
       </tbody>
     </table>
-  </div>
-</div>
+
 <script>
     $(document).ready(function() {
         $('#sections').DataTable( {

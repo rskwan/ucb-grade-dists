@@ -1,25 +1,36 @@
 {% extends "dt_base.html" %}
+{% load humanize %}
 {% load mathfilters %}
+{% load gradefilters %}
 
 {% block subtitle %}
 {{ subject }} ({{ division_set.name }})
 {% endblock subtitle %}
 
 {% block content %}
-<div class="col-1-1">
-  <div class="content">
+  <div class="breadcrumb">
+    <a href="{% url 'div-subject-stats-list' division_set.id %}">{{ division_set.name }}</a>
+    <a href="">{{ subject }}</a>
+  </div>
     <h1>
-      {{ subject }} ({{ division_set.name }})
+      {{ subject }}
     </h1>
+    <div class="stats">
+      <ul>
+        <li class="main-grade">{{ stats.grade_average|lettergrade }}</li>
+        <li>{{ stats.grade_average|floatformat:2 }}<span>Average</span></li>
+        <li>{{ stats.grade_stdev|floatformat:2 }}<span>St. Dev.</span></li>
+        <li>{{ stats.total_grades|intcomma }}<span>Grades</span></li>
+      </ul>
+    </div>
+
     <table id="courses" class="display responsive nowrap" cellspacing="0" width="100%">
       <thead>
         <tr>
           <th>Course</th>
-          <th>Median</th>
-          <th>Mean</th>
+          <th>Average</th>
           <th>St. Dev.</th>
           <th>Grades</th>
-          <th>% Letter</th>
         </tr>
       </thead>
       <tbody>
@@ -31,23 +42,13 @@
             </a>
           </td>
           <td>
-            {{ course.grade_median|floatformat:2|default:"N/A" }}
+            {{ course.grade_average|floatformat:2|default:"&mdash;" }}
           </td>
           <td>
-            {{ course.grade_average|floatformat:2|default:"N/A" }}
+            {{ course.grade_stdev|floatformat:2|default:"&mdash;" }}
           </td>
           <td>
-            {{ course.grade_stdev|floatformat:2|default:"N/A" }}
-          </td>
-          <td>
-            {{ course.total_grades }}
-          </td>
-          <td>
-{% if course.total_grades > 0 %}
-            {{ course.letter_grades|div:course.total_grades|mul:100|floatformat:0 }}
-{% else %}
-            N/A
-{% endif %}
+            {{ course.total_grades|intcomma }}
           </td>
         </tr>
 {% empty %}
@@ -62,8 +63,7 @@
 {% endfor %}
       </tbody>
     </table>
-  </div>
-</div>
+
 <script>
     $(document).ready(function() {
         $('#courses').DataTable( {
@@ -74,5 +74,13 @@
             "paging": false
         } );
     } );
+  var grade_counts = {{ stats.grade_counts|safe }};
+  var data = [];
+  _.each(grade_counts, function(v,k) {
+    obj = {}
+    obj['label'] = k;
+    obj['amt'] = v;
+    data.push(obj);
+  });
 </script>
 {% endblock content %}

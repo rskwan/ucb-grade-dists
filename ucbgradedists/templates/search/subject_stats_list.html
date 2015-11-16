@@ -1,4 +1,5 @@
 {% extends "dt_base.html" %}
+{% load humanize %}
 {% load mathfilters %}
 
 {% block subtitle %}
@@ -6,62 +7,52 @@ Subjects ({{ division_set.name }})
 {% endblock subtitle %}
 
 {% block content %}
-<div class="col-1-1">
-  <div class="content">
-    <h1>Subjects ({{ division_set.name }})</h1>
-    <table id="subjects" class="display responsive nowrap" cellspacing="0" width="100%">
-      <thead>
-        <tr>
-          <th>Subject</th>
-          <th>Median</th>
-          <th>Mean</th>
-          <th>St. Dev.</th>
-          <th>Grades</th>
-          <th>% Letter</th>
-        </tr>
-      </thead>
-      <tbody>
-{% for stats in subject_stats_list %}
-        <tr>
-          <td>
-            <a href="{% url 'div-subject-course-list' stats.division_set.id stats.subject.id %}">
-              {{ stats.subject.name }}
-            </a>
-          </td>
-          <td>
-            {{ stats.grade_median|floatformat:2|default:"N/A" }}
-          </td>
-          <td>
-            {{ stats.grade_average|floatformat:2|default:"N/A" }}
-          </td>
-          <td>
-            {{ stats.grade_stdev|floatformat:2|default:"N/A" }}
-          </td>
-          <td>
-            {{ stats.total_grades }}
-          </td>
-          <td>
-{% if stats.total_grades > 0 %}
-            {{ stats.letter_grades|div:stats.total_grades|mul:100|floatformat:0 }}
-{% else %}
-            N/A
-{% endif %}
-          </td>
-        </tr>
-{% empty %}
-        <tr>
-          <td>N/A</td>
-          <td>N/A</td>
-          <td>N/A</td>
-          <td>N/A</td>
-          <td>N/A</td>
-          <td>N/A</td>
-        </tr>
-{% endfor %}
-      </tbody>
-    </table>
-  </div>
+<div class="breadcrumb">
+  <a href="">{{ division_set.name }}</a>
 </div>
+<h1>Subjects</h1>
+<table id="subjects" class="display responsive nowrap" cellspacing="0" width="100%">
+<thead>
+  <tr>
+    <th>Subject</th>
+    <th>Average</th>
+    <th>St. Dev.</th>
+    <th>Grades</th>
+  </tr>
+</thead>
+<tbody>
+{% for stats in subject_stats_list %}
+  {% if stats.total_grades > 0 %}
+  <tr>
+    <td>
+      <a href="{% url 'div-subject-course-list' stats.division_set.id stats.subject.id %}">
+        {{ stats.subject.name }}
+      </a>
+    </td>
+    <td>
+      {{ stats.grade_average|floatformat:2|default:"&mdash;" }}
+    </td>
+    <td>
+      {{ stats.grade_stdev|floatformat:2|default:"&mdash;" }}
+    </td>
+    <td>
+      {{ stats.total_grades|intcomma }}
+    </td>
+  </tr>
+  {% endif %}
+{% empty %}
+  <tr>
+    <td>N/A</td>
+    <td>N/A</td>
+    <td>N/A</td>
+    <td>N/A</td>
+    <td>N/A</td>
+    <td>N/A</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+
 <script>
     $(document).ready(function() {
         $('#subjects').DataTable( {

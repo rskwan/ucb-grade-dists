@@ -51,6 +51,9 @@ class SubjectCourseView(DetailView):
         context['division_set'] = division_set
         context['courses'] = self.object.course_set.\
                              filter(division__in=division_set.data['divisions'])
+        context['stats'] = SubjectStats.objects.get(
+                            subject=self.object,
+                            division_set=division_set)
         return context
 
 class CourseSectionView(DetailView):
