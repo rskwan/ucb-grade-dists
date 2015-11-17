@@ -25,6 +25,7 @@
     </div>
 
     <div id="histogram"></div>
+    <div id="timeseries"></div>
 
     <table id="courses" class="display responsive nowrap" cellspacing="0" width="100%">
       <thead>
@@ -80,17 +81,28 @@ $(document).ready(function() {
 
 /* Transform grade counts into percentages for histogram */
 var grade_counts = {{ stats.grade_counts|safe }};
-var total_grades = {{ stats.total_grades }};
+var total_letter_grades = {{ stats.letter_grades }};
 var histogramData = [];
 _.each(grade_counts, function(v,k) {
-  obj = {}
+  obj = {};
   obj['label'] = k;
-  obj['amt'] = 100 * v / total_grades;
+  obj['amt'] = 100 * v / total_letter_grades;
   histogramData.push(obj);
 });
 
 /* Render the histogram */
 renderHistogram(histogramData, '#histogram');
+
+var yearly_averages = {{ stats.yearly_averages|safe }}
+var timeseriesData = [];
+_.each(yearly_averages, function(v,k) {
+  obj = {};
+  obj['date'] = d3.time.format('%Y').parse(k);
+  obj['amt'] = +v.mean
+  timeseriesData.push(obj);
+});
+renderTimeSeries(timeseriesData, '#timeseries');
+console.log(timeseriesData);
 </script>
 
 {% endblock content %}

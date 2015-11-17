@@ -2,61 +2,20 @@
     @include span-columns(12);
 
     @include media($medium-screen) {
-      @include span-columns(6);
-    }
-}
-
-line,
-rect {
-    shape-rendering: crispEdges;
-}
-
-.axis {
-    font-size: 11px;
-    -webkit-font-smoothing: antialiased;
-    fill: #777;
-
-    path,
-    line {
-        fill: none;
-        stroke: #ccc;
-        shape-rendering: crispEdges;
-    }
-    &.x,
-    &.y {
-        path { display: none; }
-        .tick line { display: none; }
+        @include span-columns(5.5);
+        @include omega;
     }
 
-}
+    .bars rect { fill: $action-color; }
 
-.grid {
-    path { display: none; }
-    .tick {
-        stroke: #eee;
+    .zero-line  {
+        stroke: #666;
         stroke-width: 1px;
         shape-rendering: crispEdges;
     }
 
-    &.y {
-        g:first-child line { display: none; }
+    .axis.x {
+        path { display: none; }
+        .tick line { display: none; }
     }
 }
-
-.value text {
-    font-size: 10px;
-    -webkit-font-smoothing: antialiased;
-
-    &.in { fill: #fff; }
-    &.out { fill: #999; }
-    &.other { display: none; }
-}
-
-.bars rect { fill: $action-color; }
-
-.zero-line  {
-    stroke: #666;
-    stroke-width: 1px;
-    shape-rendering: crispEdges;
-}
-

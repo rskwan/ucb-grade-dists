@@ -4,7 +4,9 @@
 
 @import "stats";
 @import "breadcrumb";
+@import "graphic";
 @import "histogram";
+@import "timeseries";
 
 .container {
 	@include outer-container;
