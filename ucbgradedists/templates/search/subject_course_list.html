@@ -24,6 +24,8 @@
       </ul>
     </div>
 
+    <div id="histogram"></div>
+
     <table id="courses" class="display responsive nowrap" cellspacing="0" width="100%">
       <thead>
         <tr>
@@ -65,22 +67,30 @@
     </table>
 
 <script>
-    $(document).ready(function() {
-        $('#courses').DataTable( {
-            "order": [],
-            "columnDefs": [
-                { "orderable": false, "targets": 0 }
-            ],
-            "paging": false
-        } );
+/* Set up the list of courses */
+$(document).ready(function() {
+    $('#courses').DataTable( {
+        "order": [],
+        "columnDefs": [
+            { "orderable": false, "targets": 0 }
+        ],
+        "paging": false
     } );
-  var grade_counts = {{ stats.grade_counts|safe }};
-  var data = [];
-  _.each(grade_counts, function(v,k) {
-    obj = {}
-    obj['label'] = k;
-    obj['amt'] = v;
-    data.push(obj);
-  });
+} );
+
+/* Transform grade counts into percentages for histogram */
+var grade_counts = {{ stats.grade_counts|safe }};
+var total_grades = {{ stats.total_grades }};
+var histogramData = [];
+_.each(grade_counts, function(v,k) {
+  obj = {}
+  obj['label'] = k;
+  obj['amt'] = 100 * v / total_grades;
+  histogramData.push(obj);
+});
+
+/* Render the histogram */
+renderHistogram(histogramData, '#histogram');
 </script>
+
 {% endblock content %}

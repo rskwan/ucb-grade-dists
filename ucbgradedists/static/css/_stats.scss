@@ -1,4 +1,6 @@
 .stats {
+  @include span-columns(12);
+
   $base-spacing: 1.5em !default;
   $dark-gray: #333 !default;
   $base-font-color: $dark-gray !default;
@@ -6,6 +8,7 @@
   $stats-color: lighten($action-color, 10%);
 
   padding: $base-spacing / 2;
+  margin-bottom: $base-spacing;
 
   ul {
     padding: 0;
@@ -39,5 +42,6 @@
   .main-grade {
   	font-size: 2.5em;
   	font-weight: bold;
+    color: $action-color;
   }
 }

@@ -4,6 +4,7 @@
 
 @import "stats";
 @import "breadcrumb";
+@import "histogram";
 
 .container {
 	@include outer-container;

@@ -1,11 +1,3 @@
-var COLORS = {
-    'red1': '#6C2315', 'red2': '#A23520', 'red3': '#D8472B', 'red4': '#E27560', 'red5': '#ECA395', 'red6': '#F5D1CA',
-    'orange1': '#714616', 'orange2': '#AA6A21', 'orange3': '#E38D2C', 'orange4': '#EAAA61', 'orange5': '#F1C696', 'orange6': '#F8E2CA',
-    'yellow1': '#77631B', 'yellow2': '#B39429', 'yellow3': '#EFC637', 'yellow4': '#F3D469', 'yellow5': '#F7E39B', 'yellow6': '#FBF1CD',
-    'teal1': '#0B403F', 'teal2': '#11605E', 'teal3': '#17807E', 'teal4': '#51A09E', 'teal5': '#8BC0BF', 'teal6': '#C5DFDF',
-    'blue1': '#28556F', 'blue2': '#3D7FA6', 'blue3': '#51AADE', 'blue4': '#7DBFE6', 'blue5': '#A8D5EF', 'blue6': '#D3EAF7'
-};
-
 /*
  * Convert arbitrary strings to valid css classes.
  * via: https://gist.github.com/mathewbyrne/1280286
@@ -72,95 +64,82 @@ var GRAPHIC_DEFAULT_WIDTH = 600;
 var MOBILE_THRESHOLD = 500;
 
 // Global vars
-var pymChild = null;
 var isMobile = false;
-var graphicData = null;
 
 // D3 formatters
 var fmtComma = d3.format(',');
 
 /*
- * Initialize the graphic.
- */
-var onWindowLoaded = function() {
-    if (Modernizr.svg) {
-        loadLocalData(GRAPHIC_DATA);
-        //loadCSV('data.csv')
-    } else {
-        pymChild = new pym.Child({});
-    }
-}
-
-/*
- * Load graphic data from a local source.
- */
-var loadLocalData = function(data) {
-    graphicData = data;
-
-    formatData();
-
-    pymChild = new pym.Child({
-        renderCallback: render
-    });
-}
-
-/*
- * Load graphic data from a CSV.
- */
-var loadCSV = function(url) {
-    d3.csv(GRAPHIC_DATA_URL, function(error, data) {
-        graphicData = data;
-
-        formatData();
-
-        pymChild = new pym.Child({
-            renderCallback: render
-        });
-    });
-}
-
-/*
  * Format graphic data for processing by D3.
  */
-var formatData = function() {
-    graphicData.forEach(function(d) {
-        d['amt'] = +d['amt'];
+var formatData = function(data) {
+    var graphicData = _.sortBy(data, function(d) {
+      var value = 0;
+      var letter = d.label[0];
+
+      if (letter == 'F') {
+        value = 40;
+      } else if (letter == 'D') {
+        value = 30;
+      } else if (letter == 'C') {
+        value = 20;
+      } else if (letter == 'B') {
+        value = 10;
+      } else if (letter == 'A') {
+        value = 0;
+      }
+
+      if (d.label.length > 0) {
+        var suffix = d.label[1];
+        if (suffix == '+') {
+          value -= 1;
+        } else if (suffix == '-') {
+          value += 1;
+        }
+      } 
+
+      return value;
     });
+
+    return graphicData;
 }
 
 /*
  * Render the graphic(s). Called by pym with the container width.
  */
-var render = function(containerWidth) {
-    if (!containerWidth) {
-        containerWidth = GRAPHIC_DEFAULT_WIDTH;
-    }
+var renderHistogram = function(data, container) {
+    var graphicData = formatData(data);
 
-    if (containerWidth <= MOBILE_THRESHOLD) {
-        isMobile = true;
-    } else {
-        isMobile = false;
-    }
+    // Set up resize event listener
+    $( window ).resize(function() {
+        renderColumnChart({
+            container: '#histogram',
+            data: graphicData
+        });
+    });
 
     // Render the chart!
     renderColumnChart({
-        container: '#graphic',
-        width: containerWidth,
+        container: container,
         data: graphicData
     });
-
-    // Update iframe
-    if (pymChild) {
-        pymChild.sendHeight();
-    }
 }
 
 /*
  * Render a column chart.
  */
 var renderColumnChart = function(config) {
+    /* Get width of histogram */
+    config['width'] = $(config['container']).width()
+
+    if (config['width'] <= MOBILE_THRESHOLD) {
+        isMobile = true;
+    } else {
+        isMobile = false;
+    }
+
     /*
-     * Setup chart container.
+     * Set up chart container.
      */
     var labelColumn = 'label';
     var valueColumn = 'amt';
@@ -173,11 +152,11 @@ var renderColumnChart = function(config) {
         top: 5,
         right: 5,
         bottom: 20,
-        left: 30
+        left: 50
     };
 
     var ticksY = 4;
-    var roundTicksFactor = 50;
+    var roundTicksFactor = 10;
 
     // Calculate actual chart dimensions
     var chartWidth = config['width'] - margins['left'] - margins['right'];
@@ -240,7 +219,7 @@ var renderColumnChart = function(config) {
         .orient('left')
         .ticks(ticksY)
         .tickFormat(function(d) {
-            return fmtComma(d);
+            return d + '%';
         });
 
     /*
@@ -320,7 +299,7 @@ var renderColumnChart = function(config) {
         .enter()
         .append('text')
             .text(function(d) {
-                return d[valueColumn].toFixed(0);
+                return d[valueColumn].toFixed(0) + '%';
             })
             .attr('x', function(d, i) {
                 return xScale(d[labelColumn]) + (xScale.rangeBand() / 2);
@@ -357,8 +336,3 @@ var renderColumnChart = function(config) {
             .attr('text-anchor', 'middle')
 }
 
-/*
- * Initially load the graphic
- * (NB: Use window.load to ensure all images have loaded)
- */
-window.onload = onWindowLoaded;

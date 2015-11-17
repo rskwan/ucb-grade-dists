@@ -62,7 +62,7 @@ class SubjectStats(models.Model):
     grade_average = models.FloatField(null=True)
     grade_median = models.FloatField(null=True)
     grade_stdev = models.FloatField(null=True)
-    term_averages = json.JSONField(null=True)
+    yearly_averages = json.JSONField(null=True)
     grade_counts = json.JSONField(null=True)
 
     def __unicode__(self):
@@ -95,15 +95,32 @@ class SubjectStats(models.Model):
             'count': count
         }
 
-    def compute_term_averages(self):
-        """Returns dict of verbose term name to mean grade point and and count
+    def compute_yearly_averages(self):
+        """Returns dict of year to mean grade point and and count
         for this subject in this diviion set.
         """
-        def get_term_str(term):
-            return '{}-{}'.format(term.year, term.season)
+        years = {}
+        for term in Term.objects.all():
+            data = self.compute_term_average(term)
+            if years.get(term.year):
+                previous_mean = years[term.year]['mean']
+                previous_count = years[term.year]['count']
 
-        return {get_term_str(term): self.compute_term_average(term) for term in \
-                Term.objects.all()}
+                new_count = previous_count + data['count']
+                if new_count > 0:
+                    # Weighted average of the previous mean and the new
+                    # term's mean
+                    years[term.year]['count']= new_count
+                    new_mean = (previous_count * previous_mean + \
+                                data['count'] * data['mean']) / \
+                                new_count
+                    new_mean = round(new_mean, 2)
+                    years[term.year]['mean'] = new_mean
+            else:
+                years[term.year] = {}
+                years[term.year]['count'] = data['count']
+                years[term.year]['mean'] = data['mean']
+        return years
 
     def letter_gc(self):
         """Returns a Counter with (K, V) = (letter grade name, count) over
@@ -130,7 +147,7 @@ class SubjectStats(models.Model):
             self.grade_average = round(np.mean(letter_gp), 2)
             self.grade_median = np.median(letter_gp)
             self.grade_stdev = round(np.std(letter_gp), 2)
-            self.term_averages = self.compute_term_averages()
+            self.yearly_averages = self.compute_yearly_averages()
             self.grade_counts = dict(self.letter_gc())
 
 
