@@ -3,8 +3,10 @@ import re
 from collections import Counter
 from functools import cmp_to_key
 
+from core import utils
 from django.db import models
 from django.db.models import Sum
+from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
 from django_extensions.db.fields import json
 
@@ -30,12 +32,13 @@ class Term(models.Model):
 
 class DivisionSet(models.Model):
     name = models.CharField(max_length=256)
+    slug = models.SlugField(default='')
     # data is a json field consisting exactly of
     # { 'divisions' : [ list of divisions ] }
     data = json.JSONField()
 
     def __unicode__(self):
-        return "{0}: {1}".format(self.name, self.divisions_verbose)
+        return self.name
 
     @property
     def divisions_verbose(self):
@@ -45,8 +48,38 @@ class DivisionSet(models.Model):
     def divisions_str(self):
         return ', '.join(self.divisions_verbose)
 
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(DivisionSet, self).save(*args, **kwargs)
+
+
+class Discipline(models.Model):
+    """
+    A category to which multiple subjects belong, such as natural
+    science or arts and humanities.
+    """
+    name = models.CharField(max_length=60)
+    slug = models.SlugField(default='')
+
+    def __unicode__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Discipline, self).save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['name']
+
+
 class Subject(models.Model):
+    """
+    A single academic subject, such as mathematics or French.
+    """
     name = models.CharField(max_length=256)
+    canonical = models.CharField(max_length=256, null=True)
+    discipline = models.ForeignKey(Discipline, null=True)
+    slug = models.SlugField(default='')
 
     def __unicode__(self):
         return self.name
@@ -54,112 +87,56 @@ class Subject(models.Model):
     class Meta:
         ordering = ['name']
 
-class SubjectStats(models.Model):
-    subject = models.ForeignKey(Subject)
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Subject, self).save(*args, **kwargs)  
+
+
+class Stats(models.Model):
+    """
+    An abstract base class to hold statistics about a
+    subject or discipline.
+    """
+
     division_set = models.ForeignKey(DivisionSet)
-    total_grades = models.IntegerField(default=0)
     letter_grades = models.IntegerField(default=0)
-    grade_average = models.FloatField(null=True)
-    grade_median = models.FloatField(null=True)
-    grade_stdev = models.FloatField(null=True)
-    yearly_averages = json.JSONField(null=True)
-    grade_counts = json.JSONField(null=True)
-
-    def __unicode__(self):
-        return "SubjectStats({0}, {1})".\
-               format(self.subject, self.division_set.name)
-
-    def letter_gp_term(self, term):
-        """Returns array of grade points for all sections in a particular term
-        for a particular subject in a particular division set.
-        """
-        courses = self.subject.course_set.filter(
-                    division__in=self.division_set.data['divisions'])
-        return reduce(np.append,
-                      [course.letter_gp_term(term) for course in courses],
-                      np.array([]))
-
-    def compute_term_average(self, term):
-        """Returns dict of mean grade point and count of letter grades for
-        a particular term in this subject in this division set.
-        """
-        letter_gp = self.letter_gp_term(term)
-        if letter_gp.any():
-            mean = round(np.mean(letter_gp), 2)
-            count = len(letter_gp)
-        else:
-            mean = 0
-            count = 0
-        return {
-            'mean': mean,
-            'count': count
-        }
-
-    def compute_yearly_averages(self):
-        """Returns dict of year to mean grade point and and count
-        for this subject in this diviion set.
-        """
-        years = {}
-        for term in Term.objects.all():
-            data = self.compute_term_average(term)
-            if years.get(term.year):
-                previous_mean = years[term.year]['mean']
-                previous_count = years[term.year]['count']
-
-                new_count = previous_count + data['count']
-                if new_count > 0:
-                    # Weighted average of the previous mean and the new
-                    # term's mean
-                    years[term.year]['count']= new_count
-                    new_mean = (previous_count * previous_mean + \
-                                data['count'] * data['mean']) / \
-                                new_count
-                    new_mean = round(new_mean, 2)
-                    years[term.year]['mean'] = new_mean
-            else:
-                years[term.year] = {}
-                years[term.year]['count'] = data['count']
-                years[term.year]['mean'] = data['mean']
-        return years
-
-    def letter_gc(self):
-        """Returns a Counter with (K, V) = (letter grade name, count) over
-        all courses in the division set.
-        """
-        total_gc = Counter()
-        courses = self.subject.course_set.\
-                  filter(division__in=self.division_set.data['divisions'])
-        for course in courses:
-            total_gc += course.letter_gc()
-        return total_gc
-
-    def compute(self):
-        divisions = self.division_set.data['divisions']
-        courses = self.subject.course_set.filter(division__in=divisions)
-        total_grades = self.subject.course_set.filter(division__in=divisions).\
-                       aggregate(Sum('total_grades'))['total_grades__sum']
-        letter_grades = self.subject.course_set.filter(division__in=divisions).\
-                        aggregate(Sum('letter_grades'))['letter_grades__sum']
-        self.total_grades = 0 if total_grades is None else total_grades
-        self.letter_grades = 0 if letter_grades is None else letter_grades
-        if self.letter_grades > 0:
-            letter_gp = reduce(np.append, [course.letter_gp() for course in courses])
-            self.grade_average = round(np.mean(letter_gp), 2)
-            self.grade_median = np.median(letter_gp)
-            self.grade_stdev = round(np.std(letter_gp), 2)
-            self.yearly_averages = self.compute_yearly_averages()
-            self.grade_counts = dict(self.letter_gc())
-
+    mean = models.FloatField(null=True)
+    stdev = models.FloatField(null=True)
+    distribution = json.JSONField(null=True)
 
     class Meta:
-        ordering = ['subject__name', 'division_set__name']
+        abstract = True
+
+    @property
+    def formatted_distribution(self):
+        return utils.format_distribution(self.distribution, self.letter_grades)
+
+
+class DisciplineStats(Stats):
+    """
+    Holds statistics about a discipline for a particular division.
+    """
+
+    discipline = models.ForeignKey(Discipline)
+
+    def __unicode__(self):
+        return '{}: {}'.format(self.discipline.name, self.division_set.name)
+
+class SubjectStats(Stats):
+    """
+    Holds statistics about a subject for a particular division.
+    """
+
+    subject = models.ForeignKey(Subject)
+
+    def __unicode__(self):
+        return '{}: {}'.format(self.subject.name, self.division_set.name)
 
 class Course(models.Model):
     """
-    A single course, belonging to a particular division, with
+    A single course belonging to a single division, with
     many sections offered over multiple terms.
     """
-
     LOWER = 0
     UPPER = 1
     GRADUATE = 2
@@ -185,55 +162,19 @@ class Course(models.Model):
     number = models.CharField(max_length=10)
     num_numerical_part = models.IntegerField(null=True)
     division = models.IntegerField(choices=DIVISION_CHOICES, default=OTHER)
-    total_grades = models.IntegerField(default=0)
+
+    # Stats
+    distribution = json.JSONField(null=True)
     letter_grades = models.IntegerField(default=0)
-    grade_average = models.FloatField(null=True)
-    grade_median = models.FloatField(null=True)
-    grade_stdev = models.FloatField(null=True)
+    mean = models.FloatField(null=True)
+    stdev = models.FloatField(null=True)
 
     def __unicode__(self):
         return "{0} {1}".format(self.subject, self.number)
 
-    def letter_gp_term(self, term):
-        """
-        Returns array of grade points for all sections in a particular
-        term."""
-        term_set = self.section_set.filter(term=term)
-        return reduce(np.append,
-                      [section.letter_gp() for section in term_set],
-                      np.array([]))
-
-    def letter_gp(self):
-        """
-        Returns array of grade points for all sections."""
-        return reduce(np.append,
-                      [section.letter_gp() for section in self.section_set.all()],
-                      np.array([]))
-
-    def letter_gc(self):
-        """Returns a Counter with (K, V) = (letter grade name, count) over
-        all sections in the course."""
-        total_gc = Counter()
-        for section in self.section_set.all():
-            sec_gc = section.gradecount_set.filter(grade__letter=True)
-            for gc in sec_gc:
-                name = gc.grade.name
-                total_gc[name] += gc.count
-        return total_gc
-
-    def compute_stats(self):
-        total_grades = self.section_set.aggregate(Sum('total_grades'))['total_grades__sum']
-        self.total_grades = 0 if total_grades is None else total_grades
-        letter_grades = self.section_set.aggregate(Sum('letter_grades'))['letter_grades__sum']
-        self.letter_grades = 0 if letter_grades is None else letter_grades
-        if not letter_grades:
-            self.grade_average = None
-            self.grade_median = None
-            self.grade_stdev = None
-        else:
-            self.grade_average = np.mean(self.letter_gp)
-            self.grade_median = np.median(self.letter_gp)
-            self.grade_stdev = np.std(self.letter_gp)
+    @property
+    def formatted_distribution(self):
+        return utils.format_distribution(self.distribution, self.letter_grades)
 
     def save(self, *args, **kwargs):
         m = course_num_pattern.match(self.number)
@@ -262,45 +203,34 @@ class Course(models.Model):
     class Meta:
         ordering = ['subject', 'num_numerical_part', 'number']
 
+
 class Section(models.Model):
+    """
+    A particular term's offering of a course, with a unique CCN.
+    """
     course = models.ForeignKey(Course)
     term = models.ForeignKey(Term)
     number = models.CharField(max_length=10)
     instructor = models.CharField(max_length=1024)
     ccn = models.CharField(max_length=5, verbose_name="CCN")
-    total_grades = models.IntegerField(default=0)
+
+    # Stats
+    distribution = json.JSONField(null=True)
     letter_grades = models.IntegerField(default=0)
-    grade_average = models.FloatField(null=True)
-    grade_median = models.FloatField(null=True)
-    grade_stdev = models.FloatField(null=True)
+    mean = models.FloatField(null=True)
+    stdev = models.FloatField(null=True)
 
     def __unicode__(self):
         return "{0}-{1} ({2})".format(self.course, self.number, self.term)
 
-    def letter_gp(self):
-        """Returns a NumPy array of grade points."""
-        letter_gc = self.gradecount_set.filter(grade__letter=True)
-        return np.array(reduce(lambda a, b: a + b,
-                               [[gc.grade.points] * gc.count for gc in letter_gc],
-                               []))
-
-    def compute_stats(self):
-        total_grades = self.gradecount_set.aggregate(Sum('count'))['count__sum']
-        self.total_grades = 0 if total_grades is None else total_grades
-        self.letter_grades = self.letter_gp.size
-        if self.letter_grades == 0:
-            self.grade_average = None
-            self.grade_median = None
-            self.grade_stdev = None
-        else:
-            self.grade_average = np.mean(self.letter_gp)
-            self.grade_median = np.median(self.letter_gp)
-            self.grade_stdev = np.std(self.letter_gp)
-
     class Meta:
         ordering = ['term', 'number']
 
+
 class Grade(models.Model):
+    """
+    A type of grade, for example, A+ or PASS.
+    """
     name = models.CharField(max_length=20)
     letter = models.BooleanField(default=False)
     points = models.FloatField(null=True, blank=True)
@@ -324,26 +254,6 @@ class GradeCount(models.Model):
         return "GradeCount({0}, {1})".format(self.section, self.grade)
 
     objects = GradeCountManager()
-
-def init_division_sets():
-    DivisionSet.objects.bulk_create([
-        DivisionSet(name="Lower Division",
-                    data={'divisions': [Course.LOWER]}),
-        DivisionSet(name="Upper Division",
-                    data={'divisions': [Course.UPPER]}),
-        DivisionSet(name="Undergraduate",
-                    data={'divisions': [Course.LOWER, Course.UPPER]}),
-        DivisionSet(name="Graduate",
-                    data={'divisions': [Course.GRADUATE]}),
-        DivisionSet(name="Other",
-                    data={'divisions': [Course.TEACHING,
-                                        Course.PROFESSIONAL,
-                                        Course.MASTERS,
-                                        Course.DOCTORAL,
-                                        Course.OTHER]}),
-        DivisionSet(name="All",
-                    data={'divisions': [tup[0] for tup in Course.DIVISION_CHOICES]}),
-    ])
 
 def grade_order_key(grade_name):
     ordering = ['A+', 'A', 'A-', 'B+', 'B', 'B-',

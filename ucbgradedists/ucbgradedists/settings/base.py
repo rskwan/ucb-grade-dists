@@ -13,6 +13,10 @@ import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from unipath import Path
 
+# Number of digits to use in rounding mean and standard deviation
+
+PRECISION = 3
+
 def env_var(var_name):
     """Get the environment variable VAR_NAME, or raise an Exception."""
     try:

@@ -1,77 +1,88 @@
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView, TemplateView, RedirectView
+import json
 
+from core import utils
 from core.models import Term, DivisionSet, Subject, SubjectStats, \
-                        Course, Section, Grade, GradeCount, init_division_sets
+                        Course, Section, Grade, GradeCount, \
+                        Discipline, DisciplineStats
 
-class DivisionSetListView(ListView):
-    template_name = 'search/division_set_list.html'
-    context_object_name = "division_set_list"
-
-    def get_queryset(self):
-        if DivisionSet.objects.count() == 0:
-            init_division_sets()
-        return DivisionSet.objects.all()
-
-class SubjectStatsListRedirectView(RedirectView):
-    query_string = True
-    pattern_name = 'div-subject-stats-list'
-
-class SubjectStatsListView(ListView):
-    template_name = 'search/subject_stats_list.html'
-    context_object_name = "subject_stats_list"
-
-    def get_queryset(self):
-        if 'division_set_pk' in self.kwargs:
-            self.division_set = get_object_or_404(DivisionSet, pk=int(self.kwargs['division_set_pk']))
-        else:
-            if DivisionSet.objects.count() == 0:
-                init_division_sets()
-            self.division_set = get_object_or_404(DivisionSet, name="All")
-        return SubjectStats.objects.filter(division_set=self.division_set)
+class Home(TemplateView):
+    """
+    Site homepage.
+    """
+    template_name = 'search/home.html'
 
     def get_context_data(self, **kwargs):
-        context = super(SubjectStatsListView, self).get_context_data(**kwargs)
-        context['division_set'] = self.division_set
+        context = {}
+        context['divisions'] = DivisionSet.objects.all()
+
+        division = DivisionSet.objects.get(slug='undergraduate')
+
+        context['disciplines'] = DisciplineStats.objects.filter(division_set=division).order_by('mean')
+        context['hardest_subjects'] = SubjectStats.objects.filter(division_set=division).filter(letter_grades__gte=1000).order_by('mean')[0:10]
+        context['easiest_subjects'] = SubjectStats.objects.filter(division_set=division).filter(letter_grades__gte=1000).order_by('-mean')[0:10]
+        context['hardest_classes'] = Course.objects.filter(division__in=[0,1]).filter(letter_grades__gte=1000).order_by('mean')[0:10]
+        context['easiest_classes'] = Course.objects.filter(division__in=[0,1]).filter(letter_grades__gte=1000).order_by('-mean')[0:10]
         return context
 
-class SubjectCourseView(DetailView):
+
+class DivisionView(ListView):
+    """
+    A list of subjects in a particular division.
+    """
+    template_name = 'search/division.html'
+
+    def get_queryset(self):
+        self.division_set = get_object_or_404(DivisionSet,
+            slug=self.kwargs['division'])
+        return SubjectStats.objects.filter(division_set=self.division_set) \
+                .filter(letter_grades__gte=500)
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        courses = []
+        for stat in self.get_queryset():
+            info = {}
+            info['sub'] = stat.subject.name
+            info['slug'] = stat.subject.slug
+            info['discipline'] = stat.subject.discipline.name
+            info['avg'] = stat.mean
+            info['grade'] = utils.lettergrade(stat.mean)
+            info['std'] = stat.stdev
+            info['num'] = stat.letter_grades
+            info['dist'] = stat.formatted_distribution
+
+            courses.append(info)
+
+        context['data'] = json.dumps(courses)
+        context['name'] = self.division_set.name
+
+        return context
+
+
+class SubjectDetail(DetailView):
+    """
+    A single subject.
+    """
     model = Subject
-    template_name = 'search/subject_course_list.html'
-    context_object_name = "subject"
+    template_name = 'search/subject.html'
+    slug_url_kwarg = 'subject'
 
-    def get_context_data(self, **kwargs):
-        context = super(SubjectCourseView, self).get_context_data(**kwargs)
-        if 'division_set_pk' in self.kwargs:
-            division_set = get_object_or_404(DivisionSet, pk=int(self.kwargs['division_set_pk']))
-        else:
-            if DivisionSet.objects.count() == 0:
-                init_division_sets()
-            division_set = get_object_or_404(DivisionSet, name="All")
-        context['division_set'] = division_set
-        context['courses'] = self.object.course_set.\
-                             filter(division__in=division_set.data['divisions'])
-        context['stats'] = SubjectStats.objects.get(
-                            subject=self.object,
-                            division_set=division_set)
-        return context
 
-class CourseSectionView(DetailView):
+class DisciplineDetail(DetailView):
+    """
+    A single discipline.
+    """
+    model = Discipline
+    template_name = 'search/discipline.html'
+    slug_url_kwarg = 'discipline'
+
+
+class CourseDetail(DetailView):
+    """
+    A single course.
+    """
     model = Course
-    template_name = 'search/course_section_list.html'
-    context_object_name = "course"
+    template_name = 'search/course.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(CourseSectionView, self).get_context_data(**kwargs)
-        context['sections'] = self.object.section_set.all()
-        return context
-
-class SectionDetailView(DetailView):
-    model = Section
-    template_name = 'search/section_detail.html'
-    context_object_name = "section"
-
-    def get_context_data(self, **kwargs):
-        context = super(SectionDetailView, self).get_context_data(**kwargs)
-        context['grade_counts'] = self.object.gradecount_set.in_grade_order()
-        return context

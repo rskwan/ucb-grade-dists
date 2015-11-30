@@ -2,14 +2,23 @@
 @import "base/base";
 @import "neat/neat";
 
+@import "header";
 @import "stats";
-@import "breadcrumb";
+@import "dropdown";
+@import "accordian_tabs_minimal";
 @import "graphic";
 @import "histogram";
-@import "timeseries";
+@import "dot_chart";
+@import "info";
+@import "home";
+
+body {
+	margin: 0;
+}
 
 .container {
 	@include outer-container;
+	margin: 20px auto;
 }
 
 td a {
@@ -17,4 +26,46 @@ td a {
     width: 100%;
 }
 
+.subject {
+	h1 {
+		margin-bottom: 0;
+	}
 
+	.discipline-label a {
+		color: $medium-gray;
+
+		&:hover {
+			color: $action-color;
+		}
+	}
+
+	.accordion-tabs-minimal {
+		margin-top: $base-spacing;
+	}
+	
+}
+
+
+.discipline .chart {
+	@include span-columns(4);
+}
+
+.stats-container {
+	@include span-columns(4);
+	@include omega;
+
+	position: fixed;
+	right: $gutter;
+
+	.category-legend {
+		width: 10px;
+		height: 10px;
+		float: left;
+		margin: 4px 8px 0 0;
+	}
+
+	p {
+		color: $medium-gray;
+		font-size: 12px;
+	}
+}
