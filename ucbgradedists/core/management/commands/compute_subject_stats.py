@@ -14,9 +14,9 @@ class Command(BaseCommand):
         if not DivisionSet.objects.exists():
             print "Creating division sets"
             init_division_sets()
-
-        for subject in Subject.objects.all():
-            for division_set in DivisionSet.objects.all():
+        
+        for division_set in DivisionSet.objects.all():
+            for subject in Subject.objects.all():
                 print "Computing... {}: {}".format(subject, division_set)
                 subject_stats, created = SubjectStats.objects.get_or_create(subject=subject,
                                                            division_set=division_set)
@@ -33,6 +33,15 @@ class Command(BaseCommand):
                     subject_distribution)
 
                 subject_stats.save()
+
+            print "Computing ranks..."
+            subject_stats_list = SubjectStats.objects.filter(letter_grades__gte=1000).filter(division_set=division_set).order_by('mean')
+            count = subject_stats_list.count()
+            for rank, stat in enumerate(subject_stats_list):
+                stat.rank = rank + 1
+                stat.rank_count = count
+                stat.save()
+
 
     def init_division_sets():
         """

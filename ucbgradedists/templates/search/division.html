@@ -13,8 +13,8 @@
       <p class="dropdown-description">Sort by</p>
       <p class="dropdown-button">Alphabetical</p>
       <ul class="dropdown-menu dropdown-select">
-        <li>Alphabetical</li>
         <li>Average grade</li>
+        <li>Alphabetical</li>
         <li>Discipline</li>
       </ul>
     </div>
@@ -93,7 +93,7 @@ var render = function(data, container) {
 }
 
 /*
- * Render a bar chart.
+ * Render a dot chart.
  */
 var renderDotChart = function(config) {
     config['width'] = $(config['container']).width();
@@ -375,6 +375,8 @@ $(document).ready(function() {
       toggleSort($(this).html());
     });
   });
+  sortByAverage();
+  
 });
 
 var toggleSort = function(sortBy) {
@@ -388,7 +390,7 @@ var toggleSort = function(sortBy) {
 }
 
 /*
- * Initially render the graphic
+ * Initially sort by average and render the graphic
  */
 render(data, '#graphic');
 

@@ -37,7 +37,7 @@ class DivisionView(ListView):
         self.division_set = get_object_or_404(DivisionSet,
             slug=self.kwargs['division'])
         return SubjectStats.objects.filter(division_set=self.division_set) \
-                .filter(letter_grades__gte=500)
+                .filter(letter_grades__gte=500).order_by('mean')
 
     def get_context_data(self, **kwargs):
         context = {}

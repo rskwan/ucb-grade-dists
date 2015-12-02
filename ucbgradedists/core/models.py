@@ -103,6 +103,8 @@ class Stats(models.Model):
     mean = models.FloatField(null=True)
     stdev = models.FloatField(null=True)
     distribution = json.JSONField(null=True)
+    rank = models.IntegerField(default=0)
+    rank_count = models.IntegerField(default=0)
 
     class Meta:
         abstract = True
@@ -110,6 +112,12 @@ class Stats(models.Model):
     @property
     def formatted_distribution(self):
         return utils.format_distribution(self.distribution, self.letter_grades)
+
+
+class DivisionStats(Stats):
+    """
+    Holds division-wide stats.
+    """
 
 
 class DisciplineStats(Stats):

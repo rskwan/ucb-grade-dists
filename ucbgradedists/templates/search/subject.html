@@ -25,6 +25,7 @@
                 <li>{{ stats.mean|floatformat:2 }}<span>Average</span></li>
                 <li>{{ stats.stdev|floatformat:2 }}<span>St. Dev.</span></li>
                 <li>{{ stats.letter_grades|intcomma }}<span>Grades</span></li>
+                <li>{{ stats.rank }} of {{ stats.rank_count }}<span>Rank</span></li>
               </ul>
             </div>
             <div class="histogram" id="distribution-{{ stats.division_set.slug }}"></div>

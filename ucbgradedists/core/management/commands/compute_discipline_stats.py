@@ -10,8 +10,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print "Computing discipline statistics"
 
-        for discipline in Discipline.objects.all():
-            for division_set in DivisionSet.objects.all():
+        for division_set in DivisionSet.objects.all():
+            for discipline in Discipline.objects.all():
                 print "Computing... {}: {}".format(discipline, division_set)
                 discipline_stats, created = DisciplineStats.objects.get_or_create(
                     discipline=discipline,
@@ -31,3 +31,11 @@ class Command(BaseCommand):
                     discipline_distribution)
 
                 discipline_stats.save()
+
+            print "Computing ranks..."
+            discipline_stats_list = DisciplineStats.objects.filter(letter_grades__gte=1000).filter(division_set=division_set).order_by('mean')
+            count = discipline_stats_list.count()
+            for rank, stat in enumerate(discipline_stats_list):
+                stat.rank = rank + 1
+                stat.rank_count = count
+                stat.save()
