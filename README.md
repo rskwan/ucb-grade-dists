@@ -20,8 +20,8 @@ Python 2.7.x, Postgres, and the packages in `requirements.txt`.
   * `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`: Gmail user and password for the email to send from.
   * `SERVER_EMAIL`: the email that the server should send emails from (to admins/managers).
 * Run `python manage.py migrate` to run the migrations and create tables for the models.
-* Run `python manage.py importcsv [season] [year] [inname]` on a CSV file to import data. See `python manage.py importcsv -h` for more information.
-* Run `python manage.py importdir [dir]` to import data from all CSV files in a directory.
+* Run `python manage.py import_csv [season] [year] [inname]` on a CSV file to import data. See `python manage.py importcsv -h` for more information.
+* Run `python manage.py import_dir [dir]` to import data from all CSV files in a directory.
 * Run `python manage.py import_disciplines` to import a mapping of subjects to academic disciplines.
 * Run `python manage.py compute_stats` to compute subject statistics.
 
