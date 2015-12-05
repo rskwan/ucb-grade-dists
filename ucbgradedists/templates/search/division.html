@@ -2,30 +2,36 @@
 {% load staticfiles %}
 
 {% block content %}
+<div class="division">
 
-<h1>{{ name }} subjects</h1>
+  <h1>{{ name | lower | capfirst }} subjects</h1>
 
-<div class="graphic dot-chart" id="graphic"></div>
+  <div class="graphic dot-chart" id="graphic"></div>
 
-<div class="stats-container">
-  <div class="dropdown">
-    <div class="dropdown-container">
-      <p class="dropdown-description">Sort by</p>
-      <p class="dropdown-button">Alphabetical</p>
-      <ul class="dropdown-menu dropdown-select">
-        <li>Average grade</li>
-        <li>Alphabetical</li>
-        <li>Discipline</li>
-      </ul>
+  <div class="stats-container">
+    <div class="dropdown">
+      <div class="dropdown-container">
+        <p class="dropdown-description">Sort by</p>
+        <p class="dropdown-button">Average grade</p>
+        <ul class="dropdown-menu dropdown-select">
+          <li>Alphabetical</li>
+          <li>Average grade</li>
+          <li>Discipline</li>
+        </ul>
+      </div>
     </div>
+    <div class="wrapper">
+      <div class="stats" id="stats">
+        <h2 class="instruction">Hover over a subject</h2>
+      </div>
+    </div>
+    <div class="histogram" id="histogram"></div>
   </div>
-  <div class="stats" id="stats"></div>
-  <div class="histogram" id="histogram"></div>
-</div>
 
+</div>
 <script type="text/template" id="stats-template">
-  <h2><%= sub %></h2>
-  <div class="category-legend" style="background: <% print(colors[discipline]) %>"></div><p><%= discipline %></p>
+  <h2><a href="<% print(location.origin + '/search/subject/' + slug) %>"><%= sub %></a></h2>
+  <div class="category-legend" style="background: <% print(colors[discipline]) %>"></div><p><a href="<% print(location.origin + '/search/discipline/' + discipline_slug) %>"><%= discipline %></a></p>
   <div class="stats">
     <ul>
       <li class="main-grade"><%= grade %></li>
@@ -174,6 +180,12 @@ var renderDotChart = function(config) {
             return d;
         });
 
+    var onTargetHover = function(d) {
+      d3.selectAll('.hover-target rect').classed('hover', false);
+      $('#stats').html(statsTemplate(d));
+      gradeHistogram(d.dist, '#histogram');
+    }
+
     /* Render hover targets */
     chartElement.append('g')
         .attr('class', 'hover-target')
@@ -181,19 +193,17 @@ var renderDotChart = function(config) {
         .data(config['data'])
         .enter().append('rect')
             .attr('x', function(d, i) {
-                return 0;
+                return -margins['left'];
             })
             .attr('y', function(d, i) {
                 return i * (barHeight + barGap);
             })
-            .attr('width', chartWidth)
+            .attr('width', chartWidth + margins['left'])
             .attr('height', barHeight)
             .attr('fill', '#fff')
         .on('mouseover', function(d) {
-          d3.selectAll('.hover-target rect').classed('hover', false);
+          onTargetHover(d);
           d3.select(this).classed('hover', true);
-          $('#stats').html(statsTemplate(d));
-          gradeHistogram(d.dist, '#histogram');
         })
         .on('click', function(d) {
           location.href = location.origin + '/search/subject/' + d.slug;
@@ -273,7 +283,10 @@ var renderDotChart = function(config) {
             .append('span')
                 .text(function(d) {
                     return d[labelColumn];
-                });
+                })
+        .on('click', function(d) {
+          location.href = location.origin + '/search/subject/' + d.slug;
+        });
 
     /*
      * Render dot values.
@@ -390,7 +403,7 @@ var toggleSort = function(sortBy) {
 }
 
 /*
- * Initially sort by average and render the graphic
+ * Initially render the graphic
  */
 render(data, '#graphic');
 

@@ -47,6 +47,7 @@ class DivisionView(ListView):
             info['sub'] = stat.subject.name
             info['slug'] = stat.subject.slug
             info['discipline'] = stat.subject.discipline.name
+            info['discipline_slug'] = stat.subject.discipline.slug
             info['avg'] = stat.mean
             info['grade'] = utils.lettergrade(stat.mean)
             info['std'] = stat.stdev

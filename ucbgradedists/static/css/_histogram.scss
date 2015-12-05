@@ -1,5 +1,5 @@
 .histogram {
-    .bars rect { fill: $action-color; }
+    .bars rect { fill: lighten($action-color, 10%); }
 
     .zero-line  {
         stroke: #666;
