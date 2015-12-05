@@ -1,7 +1,7 @@
 from core import utils
 from collections import Counter
 from django.core.management.base import BaseCommand, CommandError
-from core.models import Subject, SubjectStats, DivisionSet
+from core.models import Course, Subject, SubjectStats, DivisionSet
 
 class Command(BaseCommand):
     help = "Calculate mean, standard deviation and distribution \
@@ -14,7 +14,7 @@ class Command(BaseCommand):
         if not DivisionSet.objects.exists():
             print "Creating division sets"
             init_division_sets()
-        
+
         for division_set in DivisionSet.objects.all():
             for subject in Subject.objects.all():
                 print "Computing... {}: {}".format(subject, division_set)
@@ -38,30 +38,32 @@ class Command(BaseCommand):
             subject_stats_list = SubjectStats.objects.filter(letter_grades__gte=1000).filter(division_set=division_set).order_by('mean')
             count = subject_stats_list.count()
             for rank, stat in enumerate(subject_stats_list):
-                stat.rank = rank + 1
+                stat.my_rank = rank + 1
                 stat.rank_count = count
                 stat.save()
 
 
-    def init_division_sets():
-        """
-        Create the division sets.
-        """
-        DivisionSet.objects.bulk_create([
-            DivisionSet(name="Lower Division",
-                        data={'divisions': [Course.LOWER]}),
-            DivisionSet(name="Upper Division",
-                        data={'divisions': [Course.UPPER]}),
-            DivisionSet(name="Undergraduate",
-                        data={'divisions': [Course.LOWER, Course.UPPER]}),
-            DivisionSet(name="Graduate",
-                        data={'divisions': [Course.GRADUATE]}),
-            DivisionSet(name="Other",
-                        data={'divisions': [Course.TEACHING,
-                                            Course.PROFESSIONAL,
-                                            Course.MASTERS,
-                                            Course.DOCTORAL,
-                                            Course.OTHER]}),
-            DivisionSet(name="All",
-                        data={'divisions': [tup[0] for tup in Course.DIVISION_CHOICES]}),
-        ])
+def init_division_sets():
+    """
+    Create the division sets.
+    """
+    DivisionSet.objects.bulk_create([
+        DivisionSet(name="Lower Division",
+                    data={'divisions': [Course.LOWER]}),
+        DivisionSet(name="Upper Division",
+                    data={'divisions': [Course.UPPER]}),
+        DivisionSet(name="Undergraduate",
+                    data={'divisions': [Course.LOWER, Course.UPPER]}),
+        DivisionSet(name="Graduate",
+                    data={'divisions': [Course.GRADUATE]}),
+        DivisionSet(name="Other",
+                    data={'divisions': [Course.TEACHING,
+                                        Course.PROFESSIONAL,
+                                        Course.MASTERS,
+                                        Course.DOCTORAL,
+                                        Course.OTHER]}),
+        DivisionSet(name="All",
+                    data={'divisions': [tup[0] for tup in Course.DIVISION_CHOICES]}),
+    ])
+    for ds in DivisionSet.objects.all():
+        ds.save()

@@ -36,6 +36,6 @@ class Command(BaseCommand):
             discipline_stats_list = DisciplineStats.objects.filter(letter_grades__gte=1000).filter(division_set=division_set).order_by('mean')
             count = discipline_stats_list.count()
             for rank, stat in enumerate(discipline_stats_list):
-                stat.rank = rank + 1
+                stat.my_rank = rank + 1
                 stat.rank_count = count
                 stat.save()

@@ -2,8 +2,6 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from core.models import *
-from computestats import compute_stats
-from computedivstats import compute_div_stats
 
 class Command(BaseCommand):
     help = "Imports grade distribution data from a Cal Answers CSV file"
@@ -17,10 +15,6 @@ class Command(BaseCommand):
         verbosity = options['verbosity']
         term = create_objects(options['season'], options['year'],
                               options['inname'], verbosity)
-        if verbosity >= 1:
-            print "finished creating objects, now computing statistics"
-        compute_stats(verbosity, term)
-        compute_div_stats(verbosity)
 
 def create_objects(season, year, inname, verbosity):
     # assumption: this csv only contains data for one term, so CCNs are unique

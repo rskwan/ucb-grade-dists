@@ -103,7 +103,7 @@ class Stats(models.Model):
     mean = models.FloatField(null=True)
     stdev = models.FloatField(null=True)
     distribution = json.JSONField(null=True)
-    rank = models.IntegerField(default=0)
+    my_rank = models.IntegerField(default=0)
     rank_count = models.IntegerField(default=0)
 
     class Meta:
