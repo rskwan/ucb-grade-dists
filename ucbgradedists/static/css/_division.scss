@@ -1,0 +1,16 @@
+.division {
+	.wrapper {
+		@include clearfix;
+	}
+	.stats {
+		
+
+		h2 {
+			margin-bottom: 0;
+
+			&.instruction {
+				color: $medium-gray;
+			}
+		}
+	}
+}
